@@ -1,5 +1,6 @@
 package common
 
+import java.io.BufferedReader
 import java.io.InputStream
 import java.net.URL
 
@@ -18,7 +19,7 @@ fun getResourceAsStream(path: String): InputStream {
 }
 
 fun readResource(path: String): String {
-    return getResourceAsStream(path).bufferedReader().readText()
+    return getResourceAsStream(path).bufferedReader().use(BufferedReader::readText)
 }
 
 fun readResourceLines(path: String): List<String> {
