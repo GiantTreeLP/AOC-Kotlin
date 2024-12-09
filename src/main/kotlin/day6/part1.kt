@@ -4,8 +4,8 @@ import common.readResourceLines
 
 private const val GUARD = '^'
 
-object Part1 {
-    internal enum class Direction {
+private object Part1 {
+    enum class Direction {
         NORTH, EAST, SOUTH, WEST;
 
         fun turnRight(): Direction {
@@ -18,7 +18,7 @@ object Part1 {
         }
     }
 
-    internal data class State(var x: Int, var y: Int, var direction: Direction) {
+    data class State(var x: Int, var y: Int, var direction: Direction) {
         fun moveForward() {
             when (direction) {
                 Direction.NORTH -> y--

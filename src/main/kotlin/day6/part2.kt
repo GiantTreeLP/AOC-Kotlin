@@ -12,9 +12,9 @@ private const val OBSTRUCTION_NEW = 'O'
 private const val FREE = '.'
 private const val VISITED = 'X'
 
-object Part2 {
+private object Part2 {
 
-    internal enum class Direction {
+    enum class Direction {
         NORTH, EAST, SOUTH, WEST;
 
         fun turnRight(): Direction {
@@ -27,7 +27,7 @@ object Part2 {
         }
     }
 
-    internal data class State(var x: Int, var y: Int, var direction: Direction) {
+    data class State(var x: Int, var y: Int, var direction: Direction) {
         fun moveForward() {
             when (direction) {
                 Direction.NORTH -> y--
