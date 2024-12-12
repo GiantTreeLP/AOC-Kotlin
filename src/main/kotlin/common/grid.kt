@@ -39,11 +39,19 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
         return this.internalGrid[y][x]
     }
 
+    operator fun get(point: Point): T {
+        return this[point.x, point.y]
+    }
+
     fun getOrNull(x: Int, y: Int): T? {
         if (x !in 0 until this.width || y !in 0 until this.height) {
             return null
         }
         return this.internalGrid[y][x]
+    }
+
+    fun getOrNull(point: Point): T? {
+        return this.getOrNull(point.x, point.y)
     }
 
     fun getSubGrid(x: Int, y: Int, width: Int, height: Int): Grid<T> {
@@ -75,12 +83,20 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
         this.internalGrid[y][x] = value
     }
 
+    operator fun set(point: Point, value: T) {
+        this[point.x, point.y] = value
+    }
+
     inline fun <U> mapIndexed(transform: (x: Int, y: Int, T) -> U): Grid<U> {
         val newGrid = Grid<U>()
         for ((x, y, value) in this) {
             newGrid[x, y] = transform(x, y, value)
         }
         return newGrid
+    }
+
+    inline fun <U> mapIndexed(transform: (point: Point, T) -> U): Grid<U> {
+        return this.mapIndexed { x, y, value -> transform(Point(x, y), value) }
     }
 
     fun toList(): List<List<T>> {
@@ -125,6 +141,14 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     }
 
     override fun iterator(): Iterator<Triple<Int, Int, T>> = GridIterator(this)
+
+    fun pointIterator(): Iterator<Pair<Point, T>> {
+        return iterator {
+            for ((x, y, value) in this@Grid) {
+                yield(Point(x, y) to value)
+            }
+        }
+    }
 
     internal class GridIterator<T>(private val grid: Grid<T>) : Iterator<Triple<Int, Int, T>> {
         private val width = this.grid.width
