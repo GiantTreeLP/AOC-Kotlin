@@ -39,13 +39,21 @@ fun main() {
     // X = N * buttonAX + M * buttonBX
     // Y = N * buttonAY + M * buttonBY
     // Prize = N * prizeX + M * prizeY (N * 3 + M * 1)
+
+    // N = (Y - M * buttonBY) / buttonAY
+    // X = (buttonAX * (Y - M * buttonBY) / buttonAY) + (M * buttonBX)
+    // X * buttonAY = (buttonAX * Y) - (buttonAX * buttonBY * M) + (buttonAY * buttonBX * M)
+    // X * buttonAY - Y * buttonAX = M * (buttonAY * buttonBX - buttonAX * buttonBY)
+
+    // M = (X * buttonAY - Y * buttonAX) / (buttonAY * buttonBX - buttonAX * buttonBY)
+
+    // M = (Y - N * buttonAY) / buttonBY
+    // X = (N * buttonAX) + ((Y - N * buttonAY) / buttonBY) * buttonBX
+    // X * buttonBY = (N * buttonAX * buttonBY) + (Y * buttonBX) - (N * buttonAY * buttonBX)
+    // X * buttonBY - Y * buttonBX = N * (buttonAX * buttonBY - buttonAY * buttonBX)
+
+    // N = (X * buttonBY - Y * buttonBX) / (buttonAX * buttonBY - buttonBX * buttonAY)
     val cheapestTokens = clawMachines.map {
-        val dividend =
-            (-it.buttonA.move.x * it.prize.y + Part2.BUTTON_A_PRIZE * it.buttonB.move.x * it.prize.y) + (it.buttonA.move.y * it.prize.x - Part2.BUTTON_A_PRIZE * it.buttonB.move.y * it.prize.x)
-
-        val divisor = (it.buttonA.move.y * it.buttonB.move.x - it.buttonA.move.x * it.buttonB.move.y)
-        val cheapest = dividend / divisor
-
         val n =
             (it.buttonB.move.y * it.prize.x - it.buttonB.move.x * it.prize.y) / (it.buttonA.move.x * it.buttonB.move.y - it.buttonB.move.x * it.buttonA.move.y)
         val m =
@@ -55,7 +63,7 @@ fun main() {
         val reachedY = n * it.buttonA.move.y + m * it.buttonB.move.y
 
         if (reachedX == it.prize.x && reachedY == it.prize.y) {
-            cheapest
+            n * Part2.BUTTON_A_PRIZE + m * Part2.BUTTON_B_PRIZE
         } else {
             0
         }
