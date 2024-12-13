@@ -1,6 +1,6 @@
 package common
 
-data class Point(val x: Int, val y: Int) {
+data class Point(val x: Long, val y: Long) {
     operator fun plus(other: Point) = Point(x + other.x, y + other.y)
     operator fun minus(other: Point) = Point(x - other.x, y - other.y)
 

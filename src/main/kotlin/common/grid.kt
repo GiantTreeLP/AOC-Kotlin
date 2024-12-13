@@ -40,7 +40,7 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     }
 
     operator fun get(point: Point): T {
-        return this[point.x, point.y]
+        return this[point.x.toInt(), point.y.toInt()]
     }
 
     fun getOrNull(x: Int, y: Int): T? {
@@ -51,7 +51,7 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     }
 
     fun getOrNull(point: Point): T? {
-        return this.getOrNull(point.x, point.y)
+        return this.getOrNull(point.x.toInt(), point.y.toInt())
     }
 
     fun getSubGrid(x: Int, y: Int, width: Int, height: Int): Grid<T> {
@@ -84,7 +84,7 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     }
 
     operator fun set(point: Point, value: T) {
-        this[point.x, point.y] = value
+        this[point.x.toInt(), point.y.toInt()] = value
     }
 
     inline fun <U> mapIndexed(transform: (x: Int, y: Int, T) -> U): Grid<U> {
@@ -96,7 +96,7 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     }
 
     inline fun <U> mapIndexed(transform: (point: Point, T) -> U): Grid<U> {
-        return this.mapIndexed { x, y, value -> transform(Point(x, y), value) }
+        return this.mapIndexed { x, y, value -> transform(Point(x.toLong(), y.toLong()), value) }
     }
 
     fun toList(): List<List<T>> {
@@ -145,7 +145,7 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     fun pointIterator(): Iterator<Pair<Point, T>> {
         return iterator {
             for ((x, y, value) in this@Grid) {
-                yield(Point(x, y) to value)
+                yield(Point(x.toLong(), y.toLong()) to value)
             }
         }
     }
