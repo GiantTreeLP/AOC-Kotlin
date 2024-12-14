@@ -3,12 +3,9 @@ package day14
 import common.Grid.Companion.toGrid
 import common.Point
 import common.readResourceLines
+import common.standardDeviation
+import common.variance
 import day14.Part2.addModulo
-import java.awt.Color
-import java.awt.image.BufferedImage
-import javax.imageio.ImageIO
-import kotlin.io.path.Path
-import kotlin.io.path.createParentDirectories
 
 private const val WIDTH = 101L
 private const val HEIGHT = 103L
@@ -36,44 +33,67 @@ private object Part2 {
 fun main() {
     val robots = readResourceLines("day14/input").map(Part2::parseRobot)
 
-    val emptyGrid =
-        (0 until HEIGHT).map { _ ->
-            (0 until WIDTH).map { _ -> Color.BLACK }.toList()
-        }.toTypedArray()
-            .toList()
-            .toGrid()
-
     // Simulate the robots moving
     var state = robots
     var iterations = 0
-    while (true) {
-        state = state.map {
-            Part2.Robot(it.position.addModulo(it.velocity, WIDTH, HEIGHT), it.velocity)
-        }
-        iterations++
+    outer@ while (true) {
+        val variancesX = mutableListOf<Double>()
+        val variancesY = mutableListOf<Double>()
+        val states = mutableListOf<List<Part2.Robot>>()
+        // Iterate over 10000 frames
+        val windowSize = 10000
+        repeat(windowSize) {
+            state = state.map {
+                Part2.Robot(it.position.addModulo(it.velocity, WIDTH, HEIGHT), it.velocity)
+            }
+            iterations++
 
-        val grid = emptyGrid.copy()
-        for ((position) in state) {
-            grid[position] = Color.WHITE
-        }
-        BufferedImage(WIDTH.toInt(), HEIGHT.toInt(), BufferedImage.BITMASK).apply {
-            this.setRGB(
-                0,
-                0,
-                WIDTH.toInt(),
-                HEIGHT.toInt(),
-                grid.map { it.third.rgb }.toIntArray(),
-                0,
-                WIDTH.toInt()
-            )
-            val outputPath = Path("day14", "frames", "frame-$iterations.png")
-            outputPath.createParentDirectories()
-            ImageIO.write(this, "png", outputPath.toFile())
+            states.add(state)
+
+            // Calculate the variance of the x and y coordinates
+            val xVariance = state.map { it.position.x }.variance()
+            val yVariance = state.map { it.position.y }.variance()
+            variancesX.add(xVariance)
+            variancesY.add(yVariance)
         }
 
-        // Wait for the user to press enter
-        readln()
+        // Check if the variance of the x and y coordinates is within 1 standard deviation of the mean
+        val xSD = variancesX.standardDeviation() * 5
+        val xMean = variancesX.average()
+        val ySD = variancesY.standardDeviation() * 5
+        val yMean = variancesY.average()
+
+        for ((index, variances) in variancesX.zip(variancesY).withIndex()) {
+            val actualIndex = index + iterations - windowSize
+            val (xVariance, yVariance) = variances
+            // Compare the variances to be in 5 standard deviations of the mean
+            if (xVariance !in xMean - xSD..xMean + xSD &&
+                yVariance !in yMean - ySD..yMean + ySD
+            ) {
+                // We have found an outlier
+                println("Outlier found at iteration $actualIndex")
+                val grid = buildList {
+                    for (y in 0 until HEIGHT) {
+                        add(buildList {
+                            for (x in 0 until WIDTH) {
+                                add('.')
+                            }
+                        })
+                    }
+                }.toGrid()
+
+                for ((position) in states[index]) {
+                    grid[position] = '#'
+                }
+
+                println(grid)
+                println("Mean x: $xMean, Mean y: $yMean")
+                println("SD x: $xSD, SD y: $ySD")
+                println("Variance x: $xVariance, Variance y: $yVariance")
+                println("Index: $actualIndex")
+                println()
+                break@outer
+            }
+        }
     }
-
-    // The answer has to be determined manually by looking at the frames
 }

@@ -3,6 +3,7 @@ package common
 import java.io.BufferedReader
 import java.io.InputStream
 import java.net.URL
+import kotlin.math.sqrt
 
 val splitRegex = Regex("""\s+""")
 
@@ -126,4 +127,44 @@ fun <T> List<T>.isSorted(comparator: Comparator<T>): Boolean {
 
 fun <K, V> Sequence<Pair<K, V>>.toMultiMap(): Map<K, List<V>> {
     return this.groupBy({ it.first }, { it.second })
+}
+
+fun <T : Number> Iterable<T>.mean(): Double {
+    var sum = 0.0
+    var count = 0
+    for (element in this) {
+        sum += element.toDouble()
+        count++
+        if (count < 0) {
+            throw ArithmeticException("Count overflow")
+        }
+    }
+    return if (count > 0) {
+        sum / count
+    } else {
+        Double.NaN
+    }
+}
+
+fun <T : Number> Iterable<T>.variance(): Double {
+    val mean = mean()
+    var sum = 0.0
+    var count = 0
+    for (element in this) {
+        val diff = element.toDouble() - mean
+        sum += diff * diff
+        count++
+        if (count < 0) {
+            throw ArithmeticException("Count overflow")
+        }
+    }
+    return if (count > 1) {
+        sum / (count - 1)
+    } else {
+        Double.NaN
+    }
+}
+
+fun <T : Number> Iterable<T>.standardDeviation(): Double {
+    return sqrt(variance())
 }
