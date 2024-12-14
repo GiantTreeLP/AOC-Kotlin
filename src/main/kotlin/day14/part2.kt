@@ -31,11 +31,6 @@ private object Part2 {
     fun Point.addModulo(other: Point, width: Long, height: Long): Point {
         return Point((x + other.x) modulo width, (y + other.y) modulo height)
     }
-
-    fun christmasTree(state: List<Robot>): Boolean {
-        TODO("Not yet implemented")
-    }
-
 }
 
 fun main() {
@@ -47,13 +42,6 @@ fun main() {
         }.toTypedArray()
             .toList()
             .toGrid()
-
-    val treePoints = buildSet {
-        for (y in 0 until HEIGHT / 2) {
-            add(Point(((WIDTH / 2) - y), y))
-            add(Point(((WIDTH / 2) + y), y))
-        }
-    }
 
     // Simulate the robots moving
     var state = robots
