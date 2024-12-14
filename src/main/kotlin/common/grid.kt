@@ -112,6 +112,9 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
         return true
     }
 
+    fun copy(): Grid<T> {
+        return Grid(this.toList().map { it.toMutableList() }.toMutableList())
+    }
 
     override fun hashCode(): Int {
         return this.internalGrid.hashCode()
