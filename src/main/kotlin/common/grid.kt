@@ -2,8 +2,9 @@ package common
 
 class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<Triple<Int, Int, T>> {
     private val internalGrid: MutableList<MutableList<T>> = grid
-    private val width get() = this.internalGrid.firstOrNull()?.size ?: 0
-    private val height get() = this.internalGrid.size
+    val width get() = this.internalGrid.firstOrNull()?.size ?: 0
+    val height get() = this.internalGrid.size
+    val bounds get() = Rectangle(Point(0, 0), Point(this.width.toLong(), this.height.toLong()))
 
     constructor() : this(mutableListOf())
 
