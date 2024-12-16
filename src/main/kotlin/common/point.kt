@@ -1,6 +1,11 @@
 package common
 
+typealias Position = Point
+typealias Direction = Point
+
 data class Point(val x: Long, val y: Long) {
+    constructor(x: Int, y: Int) : this(x.toLong(), y.toLong())
+
     operator fun plus(other: Point) = Point(x + other.x, y + other.y)
     operator fun minus(other: Point) = Point(x - other.x, y - other.y)
 
@@ -13,6 +18,9 @@ data class Point(val x: Long, val y: Long) {
         val bottomRight = Point(maxOf(x, other.x), maxOf(y, other.y))
         return Rectangle(topLeft, bottomRight)
     }
+
+    fun turnLeft() = Point(-y, x)
+    fun turnRight() = Point(y, -x)
 
     companion object Directions {
         val UP = Point(0, -1)
