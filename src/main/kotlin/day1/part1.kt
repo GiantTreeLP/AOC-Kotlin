@@ -1,17 +1,12 @@
 package day1
 
-import common.getResourceAsStream
-import common.pairs
-import common.splitRegex
-import common.transpose
+import common.*
 import kotlin.math.abs
 
 fun main() {
-    val input = getResourceAsStream("day1/input")
-        .bufferedReader()
-        .readLines()
+    val input = readResourceLines("day1/input")
         .map { it.split(splitRegex) }
-        .map { it.map { it.toInt() } }
+        .map { it.map(String::toInt) }
         .transpose()
         .map { it.sorted() }
         .transpose()

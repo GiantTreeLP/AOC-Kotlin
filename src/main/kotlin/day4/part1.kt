@@ -1,13 +1,13 @@
 package day4
 
-import common.readResource
+import common.readResourceLines
 
 private val xmasRegex = Regex("""XMAS""")
 
 fun main() {
-    val input = readResource("day4/input")
+    val input = readResourceLines("day4/input")
 
-    val lines = input.lineSequence().filter { it.isNotEmpty() }.map { it.toCharArray() }.toList()
+    val lines = input.filter { it.isNotEmpty() }.map { it.toCharArray() }
 
     val grid = buildGrids(lines)
 

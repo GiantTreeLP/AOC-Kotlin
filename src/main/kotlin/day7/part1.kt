@@ -42,7 +42,7 @@ fun main() {
     }
 
     val sumOfCorrectEquations = equations
-        .associate { it to it.solutions() }
+        .associateWith { it.solutions() }
         .filter { it.value.contains(it.key.result) }
         .map { it.key.result }
         .sum()

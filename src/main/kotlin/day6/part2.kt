@@ -85,7 +85,7 @@ fun main() {
 
             val adjacencyList = AdjacencyList<Part2.State>()
             val vertices: List<List<EnumMap<Part2.Direction, Vertex<Part2.State>>>> = map.mapIndexed { y, line ->
-                line.mapIndexed { x, c ->
+                line.mapIndexed { x, _ ->
                     EnumMap<Part2.Direction, Vertex<Part2.State>>(Part2.Direction::class.java).apply {
                         Part2.Direction.entries.forEach { direction ->
                             put(direction, adjacencyList.createVertex(Part2.State(x, y, direction)))

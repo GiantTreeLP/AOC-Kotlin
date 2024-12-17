@@ -1,17 +1,15 @@
 package day2
 
-import common.getResourceAsStream
+import common.readResourceLines
 import common.splitRegex
 import common.unzipWithNext
 import kotlin.math.abs
 import kotlin.math.sign
 
 fun main() {
-    val reports = getResourceAsStream("day2/input")
-        .bufferedReader()
-        .readLines()
-        .map { string -> string.split(splitRegex) }
-        .map { it.map { it.toInt() } }
+    val reports = readResourceLines("day2/input")
+        .map { it.split(splitRegex) }
+        .map { it.map(String::toInt) }
 
     val (safe, unsafe) = reports
         .map { it.zipWithNext() }
@@ -27,4 +25,7 @@ fun main() {
 }
 
 private fun safeReports(pairs: List<Pair<Int, Int>>): Boolean =
-    pairs.all { (a, b) -> abs(a - b) in 1..3 } && pairs.map { (a, b) -> (a - b).sign }.toSet().size == 1
+    pairs.all { (a, b) -> abs(a - b) in 1..3 } &&
+            // Make sure the sign of the difference is the same for all pairs
+            // This makes sure that the number are in the same order, either ascending or descending
+            pairs.map { (a, b) -> (a - b).sign }.toSet().size == 1

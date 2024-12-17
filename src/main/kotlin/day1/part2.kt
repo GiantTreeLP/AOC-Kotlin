@@ -1,21 +1,15 @@
 package day1
 
-import common.getResourceAsStream
-import common.pairs
-import common.splitRegex
-import common.transpose
-import kotlin.math.abs
+import common.*
 
 fun main() {
-    val lists = getResourceAsStream("day1/input")
-        .bufferedReader()
-        .readLines()
+    val lists = readResourceLines("day1/input")
         .map { it.split(splitRegex) }
-        .map { it.map { it.toInt() } }
+        .map { it.map(String::toInt) }
         .transpose()
-    val list1 = lists[0]
-    val list2 = lists[1]
-    var result = list1.sumOf { left -> left * list2.count { it == left } }
+    val leftList = lists[0]
+    val rightList = lists[1]
+    val result = leftList.sumOf { left -> left * rightList.count { it == left } }
 
     println(result)
 }

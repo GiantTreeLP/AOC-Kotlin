@@ -42,7 +42,6 @@ fun main() {
 
     // Find the guard's starting position
     // The direction is always north
-
     val state = findGuardPosition(map)
 
     while (state.y in map.indices && state.x in map[0].indices) {

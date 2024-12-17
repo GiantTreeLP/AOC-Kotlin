@@ -4,7 +4,7 @@ import common.readResource
 
 private object Part1 {
     sealed class Cell {
-        class FreeSpace() : Cell() {
+        data object FreeSpace : Cell() {
             override fun toString(): String {
                 return "FreeSpace()"
             }
@@ -27,7 +27,7 @@ fun main() {
         } else {
             buildList {
                 repeat(size.digitToInt()) {
-                    add(Part1.Cell.FreeSpace())
+                    add(Part1.Cell.FreeSpace)
                 }
             }
         }
@@ -39,7 +39,7 @@ fun main() {
             for (j in 0 until i) {
                 if (expandedDiskMap[j] is Part1.Cell.FreeSpace) {
                     expandedDiskMap[j] = block
-                    expandedDiskMap[i] = Part1.Cell.FreeSpace()
+                    expandedDiskMap[i] = Part1.Cell.FreeSpace
                     break
                 }
             }

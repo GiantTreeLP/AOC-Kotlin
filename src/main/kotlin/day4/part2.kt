@@ -2,23 +2,20 @@ package day4
 
 import common.chunks
 import common.primaryDiagonals
-import common.printEach
-import common.readResource
+import common.readResourceLines
 
 private val xmasRegex = Regex("""MAS|SAM""")
 
 fun main() {
-    val input = readResource("day4/input")
+    val input = readResourceLines("day4/input")
 
     val grid = input
-        .lineSequence()
         .filter { it.isNotEmpty() }
         .map { it.toList() }
-        .toList()
 
     // Iterate each 3x3 grid
     val blocks = grid
-        .chunks(3).printEach()
+        .chunks(3)
         .map { it.primaryDiagonals() }
         .map { it.map { it.joinToString("") } }
         .map { it.sumOf { xmasRegex.findAll(it).count() } }

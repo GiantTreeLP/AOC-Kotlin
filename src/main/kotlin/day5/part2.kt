@@ -12,7 +12,7 @@ fun main() {
         .lineSequence()
         .filter { it.isNotEmpty() }
         .map { it.split(",") }
-        .map { it.map { it.toInt() } }
+        .map { it.map(String::toInt) }
         .toList()
 
     val comparator = buildComparator(rules)
@@ -29,7 +29,7 @@ private fun buildComparator(rules: String): Comparator<Int> {
     val orderings = rules
         .lineSequence()
         .map { it.split("|") }
-        .map { it.map { it.toInt() } }
+        .map { it.map(String::toInt) }
         .pairs()
         .toMultiMap()
 
