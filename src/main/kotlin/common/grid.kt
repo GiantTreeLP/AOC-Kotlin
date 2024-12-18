@@ -8,6 +8,17 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
 
     constructor() : this(mutableListOf())
 
+    constructor(width: Int, height: Int, initializer: (x: Int, y: Int) -> T) : this() {
+        for (y in 0 until height) {
+            val row = MutableList(width) { x -> initializer(x, y) }
+            this.addRow(row)
+        }
+    }
+
+    constructor(width: Int, height: Int, initializer: (Point) -> T) : this(width, height, { x, y ->
+        initializer(Point(x.toLong(), y.toLong()))
+    })
+
     fun addRow(row: Iterable<T>) {
         val row = row.toMutableList()
         require(row.size == this.width || this.width == 0) { "Row size must match the grid width" }
