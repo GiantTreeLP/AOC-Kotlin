@@ -15,9 +15,9 @@ private object Part2 {
     const val WIDTH = 71
     const val HEIGHT = 71
 
-    sealed class Cell(val position: Position, var predecessor: Cell?) {
-        class Wall(position: Position) : Cell(position, null)
-        class Empty(position: Position, predecessor: Cell? = null) : Cell(position, predecessor)
+    sealed class Cell(val position: Position) {
+        class Wall(position: Position) : Cell(position)
+        class Empty(position: Position) : Cell(position)
     }
 
     fun solveMaze(cutOff: Int, coordinates: List<Point>): Long {
