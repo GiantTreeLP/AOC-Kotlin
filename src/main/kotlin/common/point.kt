@@ -1,9 +1,13 @@
 package common
 
+import kotlin.math.abs
+
 typealias Position = Point
 typealias Direction = Point
 
 data class Point(val x: Long, val y: Long) {
+    val manhattanDistance get() = abs(x) + abs(y)
+
     constructor(x: Int, y: Int) : this(x.toLong(), y.toLong())
 
     operator fun plus(other: Point) = Point(x + other.x, y + other.y)
@@ -39,5 +43,5 @@ data class Rectangle(val topLeft: Point, val bottomRight: Point) {
     val height = bottomRight.y - topLeft.y
 
     infix operator fun contains(point: Point) =
-        point.x in topLeft.x..bottomRight.x && point.y in topLeft.y..bottomRight.y
+        point.x in topLeft.x..<bottomRight.x && point.y in topLeft.y..<bottomRight.y
 }
