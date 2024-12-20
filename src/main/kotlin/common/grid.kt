@@ -5,6 +5,7 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     val width get() = this.internalGrid.firstOrNull()?.size ?: 0
     val height get() = this.internalGrid.size
     val bounds get() = Rectangle(Point(0, 0), Point(this.width.toLong(), this.height.toLong()))
+    val values get() = this.internalGrid.flatten()
 
     constructor() : this(mutableListOf())
 
@@ -20,9 +21,9 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     })
 
     fun addRow(row: Iterable<T>) {
-        val row = row.toMutableList()
-        require(row.size == this.width || this.width == 0) { "Row size must match the grid width" }
-        this.internalGrid.add(row)
+        val mutableRow = row.toMutableList()
+        require(mutableRow.size == this.width || this.width == 0) { "Row size must match the grid width" }
+        this.internalGrid.add(mutableRow)
     }
 
     fun addColumn(column: List<T>) {
@@ -87,7 +88,10 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
 
         // Add empty columns if necessary
         if (this.internalGrid[y].size <= x) {
-            this.internalGrid[y].addAll(List(x - this.internalGrid[y].size + 1) { null as T })
+            this.internalGrid[y].addAll(List(x - this.internalGrid[y].size + 1) {
+                @Suppress("UNCHECKED_CAST")
+                null as T
+            })
         }
 
         require(x in 0 until this.width) { "X index out of bounds" }
@@ -191,6 +195,10 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
 
 
     companion object {
+        /**
+         * Creates a grid from a list of lists.
+         * Changes to the list will be reflected in the grid and vice versa.
+         */
         fun <T> MutableList<MutableList<T>>.asGrid(): Grid<T> {
             return Grid(this)
         }

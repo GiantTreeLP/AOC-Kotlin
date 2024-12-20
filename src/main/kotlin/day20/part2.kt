@@ -134,8 +134,8 @@ fun main() {
         }
     }.toGrid()
 
-    val start = track.first { it.third is Part2.Cell.Track.Start }.third
-    val end = track.first { it.third is Part2.Cell.Track.End }.third
+    val start = track.values.first { it is Part2.Cell.Track.Start }
+    val end = track.values.first { it is Part2.Cell.Track.End }
 
     val (distanceFieldStart, distanceFieldEnd) = Part2.calculateDistances(track, start, end)
     val referenceDistance = distanceFieldStart[end.position]

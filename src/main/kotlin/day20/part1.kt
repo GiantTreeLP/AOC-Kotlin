@@ -1,11 +1,12 @@
 package day20
 
-import common.Direction
-import common.Grid
+import common.*
 import common.Grid.Companion.toGrid
-import common.Position
-import common.readResourceLines
-import java.util.*
+import kotlin.math.abs
+import kotlin.math.min
+
+private const val MINIMUM_SAVED_PICOSECONDS = 100
+private const val MAXIMUM_DISTANCE = 2
 
 private object Part1 {
     sealed class Cell(val position: Position) {
@@ -19,44 +20,102 @@ private object Part1 {
         }
     }
 
-    data class Cheat(val first: Position)
+    /**
+     * Calculates the distance from [start] to [end] for each cell in the [track].
+     * Returns two grids:
+     * - The first grid contains the distance from [start] to each cell
+     * - The second grid contains the distance from each cell to [end]
+     */
+    fun calculateDistances(track: Grid<Cell>, start: Cell, end: Cell): Pair<Grid<Int>, Grid<Int>> {
+        val bounds = track.bounds
+        val distanceToStart = Grid(track.width, track.height) { _, _ -> Int.MAX_VALUE }
 
-    fun findShortestPath(track: Grid<Cell>): Long {
-        // Find start and end
-        val start = track.first { it.third is Cell.Track.Start }.third
-        val end = track.first { it.third is Cell.Track.End }.third
+        var currentCell = start
+        var currentDistance = 0
+        distanceToStart[currentCell.position] = currentDistance
 
-        // Find the shortest path using Dijkstra's algorithm
-        val queue = PriorityQueue<Pair<Long, Pair<Position, Position>>>(Comparator.comparingLong { it.first })
-        val visited = mutableMapOf<Pair<Position, Position>, Long>()
-
-        Direction.ALL
-            .map { start.position + it }
-            .filter { track[it] is Cell.Track }
-            .forEach {
-                queue.add(1L to (start.position to it))
+        while (currentCell != end) {
+            for (direction in Direction.ALL) {
+                val nextPosition = currentCell.position + direction
+                if (nextPosition in bounds
+                    && track[nextPosition] !is Cell.Wall
+                    && distanceToStart[nextPosition] == Int.MAX_VALUE
+                ) {
+                    currentCell = track[nextPosition]
+                    break
+                }
             }
+            currentDistance++
+            distanceToStart[currentCell.position] = currentDistance
+        }
 
-        while (queue.isNotEmpty()) {
-            val (cost, pair) = queue.poll()
-            val (_, to) = pair
-
-            if (to == end.position) {
-                return cost
+        val totalDistance = distanceToStart[end.position]
+        val distanceToEnd = Grid(track.width, track.height) { position ->
+            val distance = distanceToStart[position]
+            if (distance == Int.MAX_VALUE) {
+                Int.MAX_VALUE
+            } else {
+                totalDistance - distance
             }
+        }
+        return distanceToStart to distanceToEnd
+    }
 
-            Direction.ALL.map { to + it }.filter { track.getOrNull(it) is Cell.Track }.forEach {
-                val key = to to it
-                val currentCost = visited.getOrDefault(key, Long.MAX_VALUE)
-
-                if (cost + 1 < currentCost) {
-                    queue.add(cost + 1 to (to to it))
-                    visited[key] = cost + 1
+    /**
+     * Builds a list of vectors that can be used to cheat
+     * All vectors have a manhattan distance of at most [maximumDistance].
+     * The vectors cover the bottom right half of the manhattan distance diamond.
+     * The vector (0, 0) is not included for obvious reasons.
+     *
+     * These vectors are enough to cover all possible cheats.
+     */
+    fun getCheatVectors(maximumDistance: Int): List<Point> {
+        return buildList {
+            for (y in -maximumDistance..maximumDistance) {
+                val start = if (y > 0) 0 else 1
+                for (x in start..maximumDistance - abs(y)) {
+                    add(Point(x, y))
                 }
             }
         }
+    }
 
-        error("No path found")
+    fun calculateCheats(
+        track: Grid<Cell>,
+        distanceFieldStart: Grid<Int>,
+        distanceFieldEnd: Grid<Int>,
+        referenceDistance: Int,
+        cheatVectors: List<Point>
+    ): Int {
+        val bounds = track.bounds
+
+        return track.sumOf { (_, _, cell) ->
+            cheatVectors.count { vector ->
+                val destination = cell.position + vector
+                // Check if the destination is within bounds and not a wall
+                // This makes sure our cheat vector is valid and doesn't end up in a wall
+                if (destination in bounds &&
+                    track[destination] !is Cell.Wall
+                ) {
+
+                    // Sum of:
+                    // - The distance from start to one end of the vector
+                    // - The distance from the other end of the vector to the end
+                    // - The manhattan distance of the vector itself
+                    val distance =
+                        min(
+                            distanceFieldStart[cell.position],
+                            distanceFieldStart[destination]
+                        ) + min(
+                            distanceFieldEnd[cell.position],
+                            distanceFieldEnd[destination]
+                        ) + vector.manhattanDistance
+                    referenceDistance - distance >= MINIMUM_SAVED_PICOSECONDS
+                } else {
+                    false
+                }
+            }
+        }
     }
 }
 
@@ -75,74 +134,17 @@ fun main() {
         }
     }.toGrid()
 
-    val reference = Part1.findShortestPath(track)
+    val start = track.values.first { it is Part1.Cell.Track.Start }
+    val end = track.values.first { it is Part1.Cell.Track.End }
 
-    println("Reference: $reference")
+    val (distanceFieldStart, distanceFieldEnd) = Part1.calculateDistances(track, start, end)
+    val referenceDistance = distanceFieldStart[end.position]
 
-    // Cheats:
-    val cheats = mutableMapOf<Long, Set<Part1.Cheat>>()
+    val cheatVectors = Part1.getCheatVectors(maximumDistance = MAXIMUM_DISTANCE)
 
-    // Horizontal
-    for (y in 0 until track.height) {
-        for (x in 0 until track.width - 1) {
-            val firstPosition = Position(x, y)
+    val saved100 = Part1.calculateCheats(track, distanceFieldStart, distanceFieldEnd, referenceDistance, cheatVectors)
 
-            // Skip non-wall cells
-            if (track[firstPosition] !is Part1.Cell.Wall) {
-                continue
-            }
-
-            // Skip walls with no neighbouring track
-            if (Direction.ALL.none { track.getOrNull(firstPosition + it) is Part1.Cell.Track }) {
-                continue
-            }
-
-            val cheatedTrack = track.copy()
-            cheatedTrack[firstPosition] = Part1.Cell.Track.Empty(firstPosition)
-
-            val cheated = Part1.findShortestPath(cheatedTrack)
-            cheats.compute(cheated) { _, list ->
-                (list ?: emptySet()) + Part1.Cheat(firstPosition)
-            }
-        }
-    }
-
-    // Vertical
-    for (x in 0 until track.width) {
-        for (y in 0 until track.height - 1) {
-            val firstPosition = Position(x, y)
-
-            // Skip non-wall cells
-            if (track[firstPosition] !is Part1.Cell.Wall) {
-                continue
-            }
-
-            // Skip walls with no neighbouring track
-            if (Direction.ALL.none { track.getOrNull(firstPosition + it) is Part1.Cell.Track }) {
-                continue
-            }
-
-            val cheatedTrack = track.copy()
-            cheatedTrack[firstPosition] = Part1.Cell.Track.Empty(firstPosition)
-
-            val cheated = Part1.findShortestPath(cheatedTrack)
-            cheats.compute(cheated) { _, list ->
-                (list ?: emptySet()) + Part1.Cheat(firstPosition)
-            }
-        }
-    }
-
-    val saved100 = cheats
-        .toSortedMap()
-        .mapKeys {
-            reference - it.key
-        }
-        .mapValues {
-            it.value.size
-        }
-        .entries
-        .filter { it.key >= 100 }
-        .sumOf { it.value }
+    println("Reference: $referenceDistance")
 
     println("Saved 100 steps or more: $saved100")
 }
