@@ -27,6 +27,10 @@ fun readResourceLines(path: String): List<String> {
     return getResourceAsStream(path).bufferedReader().readLines()
 }
 
+fun isResourceAvailable(path: String): Boolean {
+    return getResource(path).openStream().use { true }
+}
+
 fun <T> List<List<T>>.transpose(): List<List<T>> {
     // Check that all rows have the same length
     val first = first()
