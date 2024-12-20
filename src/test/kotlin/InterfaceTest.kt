@@ -26,7 +26,7 @@ class TestImplementation : AOCSolution {
 class InterfaceTest {
     @Test
     fun implementationTest() {
-        val runner = Runner()
+        val runner = Runner(listOf(2024))
         runner.discoverSolutions()
         runner.run()
     }
