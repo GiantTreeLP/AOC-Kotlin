@@ -6,6 +6,7 @@ import java.net.URL
 import kotlin.math.sqrt
 
 val splitRegex = Regex("""\s+""")
+private val twoPartRegex = Regex("""\r?\n\r?\n""")
 
 fun getResource(path: String): URL {
     val resource = Thread.currentThread().contextClassLoader.getResource(path)
@@ -26,6 +27,13 @@ fun readResource(path: String): String {
 fun readResourceLines(path: String): List<String> {
     return getResourceAsStream(path).bufferedReader().readLines()
 }
+
+fun readResourceTwoParts(path: String): Pair<String, String> {
+    val input = readResource(path).split(twoPartRegex)
+    require(input.size == 2) { "Unexpected input size" }
+    return Pair(input[0], input[1])
+}
+
 
 fun isResourceAvailable(path: String): Boolean {
     return getResource(path).openStream().use { true }
@@ -69,54 +77,6 @@ fun <T> List<Pair<T, T>>.unzipWithNext(): List<T> {
     return result
 }
 
-
-fun <T> List<List<T>>.chunks(size: Int) = this.chunks(size, size)
-
-/**
- * Split the 2-D list into chunks of the given dimensions.
- *
- * @param width The width of the chunks
- * @param height The height of the chunks
- * @return A list of chunks
- */
-fun <T> List<List<T>>.chunks(width: Int, height: Int): List<List<List<T>>> {
-    require(width > 0) { "Width must be positive" }
-    require(height > 0) { "Height must be positive" }
-
-    val result = mutableListOf<List<List<T>>>()
-
-    for (y in 0..(this.size - height)) {
-        for (x in 0..(this[y].size - width)) {
-            // x, y is the top-left corner of the chunk
-            val chunk = mutableListOf<List<T>>()
-            for (dy in 0 until height) {
-                chunk.add(this[y + dy].subList(x, x + width))
-            }
-            result.add(chunk)
-        }
-    }
-
-    return result
-}
-
-fun <T> List<List<T>>.primaryDiagonals(): List<List<T>> {
-    require(all { it.size == size }) { "Grid must be a square" }
-
-    val result = mutableListOf<List<T>>()
-
-    // Top left to bottom right
-    val diagonal = mutableListOf<T>()
-    // Top right to bottom left
-    val diagonal2 = mutableListOf<T>()
-    for (i in this.indices) {
-        diagonal.add(this[i][i])
-        diagonal2.add(this[i][size - i - 1])
-    }
-    result.add(diagonal)
-    result.add(diagonal2)
-
-    return result
-}
 
 fun <T> Iterable<T>.printEach() = onEach { println(it) }
 

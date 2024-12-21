@@ -14,20 +14,20 @@ That way I am able to run each part separately.
 Commonly used functions, classes and extensions can be found in the `common` package.
 
 Input is expected to be in a file named `input` in the resources folder of the corresponding day.
+The same goes for the sample input, which is expected to be in a file named `sample`.
 The layout of the directories is as follows:
 ```
 - src
   - main
     - kotlin
-      - dayX
-        - part1.kt
-        - part2.kt
+      - year2024
+        - dayXX.kt
       - resources
-        - dayX
+        - dayXX
           - input
           - sample
 ```
 
-To run a solution, simply run the `main` function of the desired part.
+To run a solution, simply run the `main` function of the [`common.Runner`](src/main/kotlin/common/runner.kt) file.
 
 Don't expect the code to be perfect, I'm trying to solve the puzzles in a way that is good enough for me.

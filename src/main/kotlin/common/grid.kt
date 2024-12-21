@@ -67,7 +67,7 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
         return this.getOrNull(point.x.toInt(), point.y.toInt())
     }
 
-    fun getSubGrid(x: Int, y: Int, width: Int, height: Int): Grid<T> {
+    fun subGrid(x: Int, y: Int, width: Int, height: Int): Grid<T> {
         require(x in 0 until this.width) { "X index out of bounds" }
         require(y in 0 until this.height) { "Y index out of bounds" }
         require(x + width <= this.width) { "Subgrid width out of bounds" }
@@ -78,6 +78,36 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
             subGrid.addRow(this.internalGrid[y + dy].subList(x, x + width))
         }
         return subGrid
+    }
+
+    fun subGrids(width: Int, height: Int): List<Grid<T>> {
+        return buildList {
+            for (y in 0..(this@Grid.height - height)) {
+                for (x in 0..(this@Grid.width - width)) {
+                    add(this@Grid.subGrid(x, y, width, height))
+                }
+            }
+        }
+    }
+
+    fun primaryDiagonals(): List<List<T>> {
+        val result = mutableListOf<List<T>>()
+
+        // Top left to bottom right
+        val diagonal = mutableListOf<T>()
+        for (i in 0 until this.width) {
+            diagonal.add(this[i, i])
+        }
+        result.add(diagonal)
+
+        // Top right to bottom left
+        val diagonal2 = mutableListOf<T>()
+        for (i in 0 until this.width) {
+            diagonal2.add(this[this.width - i - 1, i])
+        }
+        result.add(diagonal2)
+
+        return result
     }
 
     operator fun set(x: Int, y: Int, value: T) {
@@ -116,7 +146,7 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     }
 
     fun toList(): List<List<T>> {
-        return this.internalGrid.map { it.toList() }
+        return this.internalGrid.map { it.toList() }.toList()
     }
 
     override fun equals(other: Any?): Boolean {
