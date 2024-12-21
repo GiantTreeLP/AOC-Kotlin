@@ -1,25 +1,18 @@
-package day15
+package year2024
 
+import com.google.auto.service.AutoService
+import common.AOCSolution
 import common.Grid
 import common.Grid.Companion.toGrid
 import common.Point
-import common.readResource
-import day15.Part2.directions
-import day15.Part2.findRobot
-import day15.Part2.moveCell
+import common.readResourceTwoParts
 
-private val splitRegex = Regex("""\r?\n\r?\n""")
-private val lineRegex = Regex("""\r?\n""")
+@AutoService(AOCSolution::class)
+class Day15 : AOCSolution {
+    override val year = 2024
+    override val day = 15
 
-private object Part2 {
-    val directions = mapOf(
-        '^' to Point.UP,
-        '<' to Point.LEFT,
-        'v' to Point.DOWN,
-        '>' to Point.RIGHT
-    )
-
-    sealed class Cell(var position: Point) {
+    private sealed class Cell(var position: Point) {
         class Wall(position: Point) : Cell(position) {
             override fun toString() = "#"
         }
@@ -31,6 +24,12 @@ private object Part2 {
         sealed class Box(position: Point) : Cell(position) {
             abstract fun corresponding(map: Grid<Cell>): Box
             override fun toString() = "O"
+
+            class Small(position: Point) : Box(position) {
+                override fun corresponding(map: Grid<Cell>): Box {
+                    TODO("Not yet implemented")
+                }
+            }
 
             class Left(position: Point) : Box(position) {
                 override fun corresponding(map: Grid<Cell>): Right {
@@ -68,10 +67,10 @@ private object Part2 {
         }
     }
 
-    fun findRobot(map: Grid<Cell>) =
+    private fun findRobot(map: Grid<Cell>) =
         map.first { it.third is Cell.Robot }.third as Cell.Robot
 
-    fun canMoveBoxVertical(map: Grid<Cell>, cell: Cell, direction: Point): Boolean {
+    private fun canMoveBoxVertical(map: Grid<Cell>, cell: Cell, direction: Point): Boolean {
         val newPosition = cell.position + direction
 
         if (newPosition !in map.bounds) {
@@ -83,7 +82,12 @@ private object Part2 {
             is Cell.Wall -> {
                 return false
             }
-            // A box can be pushed and needs to check, whether it can be pushed
+            // A small box can be moved easily
+            is Cell.Box.Small -> {
+                return canMoveBoxVertical(map, newCell, direction)
+            }
+
+            // A big box can be pushed and needs to check, whether it can be pushed
             is Cell.Box -> {
                 // If the cell is a box, we need to check whether both parts can be moved
                 if (direction == Point.UP || direction == Point.DOWN) {
@@ -102,7 +106,7 @@ private object Part2 {
         return false
     }
 
-    fun moveCell(map: Grid<Cell>, cell: Cell, direction: Point): Boolean {
+    private fun moveCell(map: Grid<Cell>, cell: Cell, direction: Point): Boolean {
         val newPosition = cell.position + direction
 
         if (newPosition !in map.bounds) {
@@ -113,6 +117,14 @@ private object Part2 {
             // A wall prevents movement
             is Cell.Wall -> {
                 return false
+            }
+            // A small box can be moved easily
+            is Cell.Box.Small -> {
+                val canMove = moveCell(map, newCell, direction)
+                if (canMove) {
+                    moveCellDirect(map, cell, newPosition)
+                }
+                return canMove
             }
             // A box can be pushed and needs to check, whether it can be pushed
             is Cell.Box -> {
@@ -163,43 +175,81 @@ private object Part2 {
         map[newPosition] = cell.apply { position = newPosition }
     }
 
-}
+    private fun simulateRobot(map: Grid<Cell>, moves: String) {
+        var robot = findRobot(map)
+        val movementDirections = moves.replace("\n", "").map { directions[it]!! }
 
-fun main() {
-    val (inputMap, moves) = readResource("day15/input").split(splitRegex)
-
-    val map = inputMap.split(lineRegex).mapIndexed { y, row ->
-        row.mapIndexed { x, cell ->
-            val point1 = Point((x * 2).toLong(), y.toLong())
-            val point2 = Point((x * 2 + 1).toLong(), y.toLong())
-            when (cell) {
-                '#' -> listOf(Part2.Cell.Wall(point1), Part2.Cell.Wall(point2))
-                '.' -> listOf(Part2.Cell.Empty(point1), Part2.Cell.Empty(point2))
-                'O' -> listOf(Part2.Cell.Box.Left(point1), Part2.Cell.Box.Right(point2))
-                '@' -> listOf(Part2.Cell.Robot(point1), Part2.Cell.Empty(point2))
-                else -> error("Unknown cell type: $cell")
-            }
-        }.flatten()
-    }.toGrid()
-
-    var robot = findRobot(map)
-    val movementDirections = moves.replace("\n", "").map { directions[it]!! }
-
-    for (direction in movementDirections) {
-        moveCell(map, robot, direction)
-        robot = findRobot(map)
-    }
-
-    println(map)
-
-    // The solution is the same as in part 1, we just need to look at the left half of each box
-    val boxesSum = map.sumOf {
-        if (it.third !is Part2.Cell.Box.Left) {
-            0
-        } else {
-            it.third.position.x + it.third.position.y * 100
+        for (direction in movementDirections) {
+            moveCell(map, robot, direction)
+            robot = findRobot(map)
         }
     }
 
-    println(boxesSum)
+    override fun part1(inputFile: String): String {
+        val (inputMap, moves) = readResourceTwoParts(inputFile)
+
+        val map = inputMap.lines().mapIndexed { y, row ->
+            row.mapIndexed { x, cell ->
+                when (cell) {
+                    '#' -> Cell.Wall(Point(x.toLong(), y.toLong()))
+                    '.' -> Cell.Empty(Point(x.toLong(), y.toLong()))
+                    'O' -> Cell.Box.Small(Point(x.toLong(), y.toLong()))
+                    '@' -> Cell.Robot(Point(x.toLong(), y.toLong()))
+                    else -> error("Unknown cell type: $cell")
+                }
+            }
+        }.toGrid()
+
+        simulateRobot(map, moves)
+
+        val boxesSum = map.sumOf {
+            if (it.third is Cell.Box) {
+                it.third.position.x + it.third.position.y * 100
+            } else {
+                0
+            }
+        }
+
+        return boxesSum.toString()
+    }
+
+    override fun part2(inputFile: String): String {
+        val (inputMap, moves) = readResourceTwoParts(inputFile)
+
+        val map = inputMap.lines().mapIndexed { y, row ->
+            row.mapIndexed { x, cell ->
+                val point1 = Point((x * 2), y)
+                val point2 = Point((x * 2 + 1), y)
+                when (cell) {
+                    '#' -> listOf(Cell.Wall(point1), Cell.Wall(point2))
+                    '.' -> listOf(Cell.Empty(point1), Cell.Empty(point2))
+                    'O' -> listOf(Cell.Box.Left(point1), Cell.Box.Right(point2))
+                    '@' -> listOf(Cell.Robot(point1), Cell.Empty(point2))
+                    else -> error("Unknown cell type: $cell")
+                }
+            }.flatten()
+        }.toGrid()
+
+        simulateRobot(map, moves)
+
+        // The solution is the same as in part 1, we just need to look at the left half of each box
+        val boxesSum = map.sumOf {
+            if (it.third is Cell.Box.Left) {
+                it.third.position.x + it.third.position.y * 100
+            } else {
+                0
+            }
+        }
+
+        return boxesSum.toString()
+    }
+
+    companion object {
+        private val directions = mapOf(
+            '^' to Point.UP,
+            '<' to Point.LEFT,
+            'v' to Point.DOWN,
+            '>' to Point.RIGHT
+        )
+    }
 }
