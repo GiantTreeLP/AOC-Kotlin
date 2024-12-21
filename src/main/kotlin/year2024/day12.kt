@@ -1,22 +1,31 @@
-package day12
+package year2024
 
+import com.google.auto.service.AutoService
+import common.AOCSolution
 import common.Grid
 import common.Grid.Companion.toGrid
 import common.Point
 import common.readResourceLines
-import day12.Part2.findRegionSides
 
-private object Part2 {
-    data class PlantRegion(val plant: Char, val plants: Set<Point>)
+@AutoService(AOCSolution::class)
+class Day12 : AOCSolution {
+    override val year = 2024
+    override val day = 12
 
-    fun neighbours(point: Point, grid: Grid<Char>): List<Pair<Point, Char>> {
-        return point.neighbours()
-            .map { point -> point to grid.getOrNull(point) }
-            .filter { (_, c) -> c != null }
-            .map { (p, c) -> p to c!! }
+    private data class PlantRegion(val plant: Char, val plants: Set<Point>)
+
+    private fun neighbours(point: Point, grid: Grid<Char>): List<Pair<Point, Char>> {
+        @Suppress("UNCHECKED_CAST")
+        return neighboursWithNull(point, grid)
+            .filter { (_, c) -> c != null } as List<Pair<Point, Char>>
     }
 
-    fun findAllRegions(grid: Grid<Char>): List<PlantRegion> {
+    private fun neighboursWithNull(point: Point, grid: Grid<Char>): List<Pair<Point, Char?>> {
+        return point.neighbours()
+            .map { neighbour -> neighbour to grid.getOrNull(neighbour) }
+    }
+
+    private fun findAllRegions(grid: Grid<Char>): List<PlantRegion> {
         val visited = mutableSetOf<Pair<Point, Char>>()
         val regions = mutableListOf<PlantRegion>()
 
@@ -42,10 +51,10 @@ private object Part2 {
         return regions
     }
 
-    fun findRegionEdges(region: PlantRegion): List<Pair<Point, Point>> {
+    private fun findRegionEdges(region: PlantRegion): List<Pair<Point, Point>> {
         return buildList {
             for (point in region.plants) {
-                for (direction in Point.Directions.ALL) {
+                for (direction in Point.ALL) {
                     val neighbour = point + direction
                     if (neighbour !in region.plants) {
                         add(direction to point)
@@ -55,7 +64,7 @@ private object Part2 {
         }
     }
 
-    fun findRegionSides(region: PlantRegion): Long {
+    private fun findRegionSides(region: PlantRegion): Long {
         val edges = findRegionEdges(region)
 
         val horizontalDirections = listOf(Point.UP, Point.DOWN)
@@ -99,21 +108,40 @@ private object Part2 {
 
         return horizontalEdges + verticalEdges
     }
-}
 
-fun main() {
-    val grid = readResourceLines("day12/input").map { it.toCharArray().toList() }.toGrid()
+    override fun part1(inputFile: String): String {
+        val grid = readResourceLines(inputFile)
+            .map(String::toList)
+            .toGrid()
 
-//    println(grid)
+        // Build the plant regions
+        val regions = findAllRegions(grid)
 
-    // Build the plant regions
-    val regions = Part2.findAllRegions(grid)
+        val regionsPrice = regions.sumOf { (plant, plants) ->
+            plants.sumOf { point ->
+                // Get all neighbours of the plant that are not the plant itself
+                // A neighbor that is outside the grid will have a null value
+                neighboursWithNull(point, grid).count { (_, neighbor) -> plant != neighbor }
+            } * plants.size
+        }
 
-    val regionsPrice = regions.sumOf { region ->
-        // Find the amount of sides of the region and multiply it by the amount of plants in the region
-        // yielding the price of the region
-        findRegionSides(region) * region.plants.size
+        return regionsPrice.toString()
     }
 
-    println(regionsPrice)
+    override fun part2(inputFile: String): String {
+        val grid = readResourceLines(inputFile)
+            .map(String::toList)
+            .toGrid()
+
+        // Build the plant regions
+        val regions = findAllRegions(grid)
+
+        val regionsPrice = regions.sumOf { region ->
+            // Find the amount of sides of the region and multiply it by the amount of plants in the region
+            // yielding the price of the region
+            findRegionSides(region) * region.plants.size
+        }
+
+        return regionsPrice.toString()
+    }
 }
