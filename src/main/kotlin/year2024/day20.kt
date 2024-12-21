@@ -1,15 +1,17 @@
-package day20
+package year2024
 
+import com.google.auto.service.AutoService
 import common.*
 import common.Grid.Companion.toGrid
 import kotlin.math.abs
 import kotlin.math.min
 
-private const val MINIMUM_SAVED_PICOSECONDS = 100
-private const val MAXIMUM_DISTANCE = 20
+@AutoService(AOCSolution::class)
+class Day20 : AOCSolution {
+    override val year = 2024
+    override val day = 20
 
-private object Part2 {
-    sealed class Cell(val position: Position) {
+    private sealed class Cell(val position: Position) {
         override fun toString() = "${this::class.simpleName}($position)"
 
         class Wall(position: Position) : Cell(position)
@@ -26,13 +28,13 @@ private object Part2 {
      * - The first grid contains the distance from [start] to each cell
      * - The second grid contains the distance from each cell to [end]
      */
-    fun calculateDistances(track: Grid<Cell>, start: Cell, end: Cell): Pair<Grid<Int>, Grid<Int>> {
+    private fun calculateDistances(track: Grid<Cell>, start: Cell, end: Cell): Pair<Grid<Int>, Grid<Int>> {
         val bounds = track.bounds
         val distanceToStart = Grid(track.width, track.height) { _, _ -> Int.MAX_VALUE }
 
         var currentCell = start
         var currentDistance = 0
-        distanceToStart[currentCell.position] = currentDistance
+        distanceToStart[currentCell.position] = 0
 
         while (currentCell != end) {
             for (direction in Direction.ALL) {
@@ -69,7 +71,7 @@ private object Part2 {
      *
      * These vectors are enough to cover all possible cheats.
      */
-    fun getCheatVectors(maximumDistance: Int): List<Point> {
+    private fun getCheatVectors(maximumDistance: Int): List<Point> {
         return buildList {
             for (y in -maximumDistance..maximumDistance) {
                 val start = if (y > 0) 0 else 1
@@ -80,12 +82,12 @@ private object Part2 {
         }
     }
 
-    fun calculateCheats(
+    private fun calculateCheats(
         track: Grid<Cell>,
         distanceFieldStart: Grid<Int>,
         distanceFieldEnd: Grid<Int>,
         referenceDistance: Int,
-        cheatVectors: List<Point>
+        cheatVectors: List<Point>,
     ): Int {
         val bounds = track.bounds
 
@@ -117,37 +119,87 @@ private object Part2 {
             }
         }
     }
-}
 
-fun main() {
-    val input = readResourceLines("day20/input")
-
-    val track = input.mapIndexed { y, row ->
-        row.mapIndexed { x, cell ->
-            when (cell) {
-                '#' -> Part2.Cell.Wall(Position(x, y))
-                '.' -> Part2.Cell.Track.Empty(Position(x, y))
-                'S' -> Part2.Cell.Track.Start(Position(x, y))
-                'E' -> Part2.Cell.Track.End(Position(x, y))
-                else -> error("Unknown cell: $cell")
-            }
-        }
-    }.toGrid()
-
-    val start = track.values.first { it is Part2.Cell.Track.Start }
-    val end = track.values.first { it is Part2.Cell.Track.End }
-
-    val (distanceFieldStart, distanceFieldEnd) = Part2.calculateDistances(track, start, end)
-    val referenceDistance = distanceFieldStart[end.position]
-
-    val cheatVectors = Part2.getCheatVectors(maximumDistance = MAXIMUM_DISTANCE)
-
-    val goodCheatedPaths = Part2.calculateCheats(
-        track,
-        distanceFieldStart,
-        distanceFieldEnd,
-        referenceDistance,
-        cheatVectors
+    private data class TrackAndCheatVectors(
+        val track: Grid<Cell>,
+        val start: Cell.Track.Start,
+        val end: Cell.Track.End,
+        val distanceFieldStart: Grid<Int>,
+        val distanceFieldEnd: Grid<Int>,
+        val cheatVectors: List<Point>
     )
-    println("Good cheated paths: $goodCheatedPaths")
+
+    private fun parseTrackAndCreateCheatVectors(inputFile: String, maximumDistance: Int): TrackAndCheatVectors {
+        val input = readResourceLines(inputFile)
+
+        val track = input.mapIndexed { y, row ->
+            row.mapIndexed { x, cell ->
+                when (cell) {
+                    '#' -> Cell.Wall(Position(x, y))
+                    '.' -> Cell.Track.Empty(Position(x, y))
+                    'S' -> Cell.Track.Start(Position(x, y))
+                    'E' -> Cell.Track.End(Position(x, y))
+                    else -> error("Unknown cell: $cell")
+                }
+            }
+        }.toGrid()
+
+        val start = track.values.first { it is Cell.Track.Start }
+        val end = track.values.first { it is Cell.Track.End }
+
+        val (distanceFieldStart, distanceFieldEnd) = calculateDistances(track, start, end)
+
+        val cheatVectors = getCheatVectors(maximumDistance)
+
+        return TrackAndCheatVectors(
+            track,
+            start as Cell.Track.Start,
+            end as Cell.Track.End,
+            distanceFieldStart,
+            distanceFieldEnd,
+            cheatVectors
+        )
+    }
+
+    override fun part1(inputFile: String): String {
+        val (track,
+            _,
+            end,
+            distanceFieldStart,
+            distanceFieldEnd,
+            cheatVectors) = parseTrackAndCreateCheatVectors(inputFile, 2)
+
+        val goodCheats = calculateCheats(
+            track,
+            distanceFieldStart,
+            distanceFieldEnd,
+            distanceFieldStart[end.position],
+            cheatVectors
+        )
+
+        return goodCheats.toString()
+    }
+
+    override fun part2(inputFile: String): String {
+        val (track,
+            _,
+            end,
+            distanceFieldStart,
+            distanceFieldEnd,
+            cheatVectors) = parseTrackAndCreateCheatVectors(inputFile, 20)
+
+        val goodCheats = calculateCheats(
+            track,
+            distanceFieldStart,
+            distanceFieldEnd,
+            distanceFieldStart[end.position],
+            cheatVectors
+        )
+
+        return goodCheats.toString()
+    }
+
+    companion object {
+        private const val MINIMUM_SAVED_PICOSECONDS = 100
+    }
 }
