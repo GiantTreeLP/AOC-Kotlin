@@ -23,8 +23,8 @@ data class Point(val x: Long, val y: Long) {
         return Rectangle(topLeft, bottomRight)
     }
 
-    fun turnLeft() = Point(-y, x)
-    fun turnRight() = Point(y, -x)
+    fun turnRight() = Point(-y, x)
+    fun turnLeft() = Point(y, -x)
 
     companion object Directions {
         val UP = Point(0, -1)
