@@ -44,19 +44,19 @@ class Runner(private val years: List<Int>, private val days: List<Int>) {
                 error("Actual input file not found: $actualInputFile")
             }
 
-            println("Results and times for sample input:")
+            println("Results and times for part 1:")
             val part1Sample = measureTimedValue { solution.part1(sampleInputFile) }
-            println("Part 1: ${part1Sample.value} (${part1Sample.duration})")
-            val part2Sample = measureTimedValue { solution.part2(sampleInputFile) }
-            println("Part 2: ${part2Sample.value} (${part2Sample.duration})")
+            println("Part 1 sample input: ${part1Sample.value} (${part1Sample.duration})")
+            val part1Actual = measureTimedValue { solution.part1(actualInputFile) }
+            println("Part 1 actual input: ${part1Actual.value} (${part1Actual.duration})")
             println()
 
 
-            println("Results and times for actual input:")
-            val part1Actual = measureTimedValue { solution.part1(actualInputFile) }
-            println("Part 1: ${part1Actual.value} (${part1Actual.duration})")
+            println("Results and times for part 2:")
+            val part2Sample = measureTimedValue { solution.part2(sampleInputFile) }
+            println("Part 2 sample input: ${part2Sample.value} (${part2Sample.duration})")
             val part2Actual = measureTimedValue { solution.part2(actualInputFile) }
-            println("Part 2: ${part2Actual.value} (${part2Actual.duration})")
+            println("Part 2 actual input: ${part2Actual.value} (${part2Actual.duration})")
             println()
         }
     }
