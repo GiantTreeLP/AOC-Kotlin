@@ -33,8 +33,8 @@ class Runner(private val years: List<Int>, private val days: List<Int>) {
 
         solutions.forEach { solution ->
             println("Running solutions for %04d/%02d...".format(solution.year, solution.day))
-            val sampleInputFile = "day%02d/sample".format(solution.day)
-            val actualInputFile = "day%02d/input".format(solution.day)
+            val sampleInputFile = "year%04d/day%02d/sample".format(solution.year, solution.day)
+            val actualInputFile = "year%04d/day%02d/input".format(solution.year, solution.day)
 
             if (!isResourceAvailable(sampleInputFile)) {
                 error("Sample input file not found: $sampleInputFile")
