@@ -1,13 +1,18 @@
-package day17
+package year2024
 
+import com.google.auto.service.AutoService
+import common.AOCSolution
 import common.readResource
-import java.util.*
+import java.util.ArrayDeque
 import kotlin.math.pow
 
+@AutoService(AOCSolution::class)
+class Day17 : AOCSolution {
+    override val year = 2024
+    override val day = 17
 
-private object Part2 {
-    data class Registers(var a: Long, var b: Long, var c: Long, var ip: Int = 0)
-    data class CPU(val registers: Registers, val instructions: List<Long>) {
+    private data class Registers(var a: Long, var b: Long, var c: Long, var ip: Int = 0)
+    private data class CPU(val registers: Registers, val instructions: List<Long>) {
         fun literalOperand(operand: Long): Long = operand
         fun comboOperand(operand: Long): Long = when (operand) {
             in 0..3 -> operand
@@ -72,7 +77,7 @@ private object Part2 {
         }
     }
 
-    fun parseCPU(input: String): CPU {
+    private fun parseCPU(input: String): CPU {
         val registerARegex = Regex("""Register A: (\d+)""")
         val registerBRegex = Regex("""Register B: (\d+)""")
         val registerCRegex = Regex("""Register C: (\d+)""")
@@ -88,44 +93,45 @@ private object Part2 {
             program.split(",").map { it.toLong() })
     }
 
-    data class SearchState(val offset: Int, val nextValue: Long)
-}
+    private data class SearchState(val offset: Int, val nextValue: Long)
 
-fun main() {
-    val input = readResource("day17/input")
-    val cpu = Part2.parseCPU(input)
+    override fun part1(inputFile: String): String {
+        val cpu = parseCPU(readResource(inputFile))
 
-    println(cpu)
+        return cpu.runProgram().joinToString(",")
+    }
 
-    // Try to find the value that will make the program output the same as the instructions
-    val stack = ArrayDeque<Part2.SearchState>()
-    stack.add(Part2.SearchState(cpu.instructions.size - 1, 0))
+    override fun part2(inputFile: String): String {
+        val cpu = parseCPU(readResource(inputFile))
 
-    while (stack.isNotEmpty()) {
-        val (offset, value) = stack.pollFirst()
+        // Try to find the value that will make the program output the same as the instructions
+        val stack = ArrayDeque<SearchState>()
+        stack.add(SearchState(cpu.instructions.size - 1, 0))
 
-        // Given that we are working with a 3-bit CPU, we try all possible values (0-7)
-        for (i in 0 until 8) {
-            val nextValue = (value shl 3) + i
-            val output = cpu.run {
-                registers.a = nextValue
-                registers.b = 0
-                registers.c = 0
-                registers.ip = 0
-                runProgram()
-            }
+        while (stack.isNotEmpty()) {
+            val (offset, value) = stack.pollFirst()
 
-            if (output == cpu.instructions.drop(offset)) {
-                println("Partial match:")
-                println(output)
-                if (offset == 0) {
-                    println("Found value:")
-                    println(nextValue)
-                    return
-                } else {
-                    stack.add(Part2.SearchState(offset - 1, nextValue))
+            // Given that we are working with a 3-bit CPU, we try all possible values (0-7)
+            for (i in 0 until 8) {
+                val nextValue = (value shl 3) + i
+                val output = cpu.run {
+                    registers.a = nextValue
+                    registers.b = 0
+                    registers.c = 0
+                    registers.ip = 0
+                    runProgram()
+                }
+
+                if (output == cpu.instructions.drop(offset)) {
+                    if (offset == 0) {
+                        return nextValue.toString()
+                    } else {
+                        stack.add(SearchState(offset - 1, nextValue))
+                    }
                 }
             }
         }
+
+        return "Not found"
     }
 }
