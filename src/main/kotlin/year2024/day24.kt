@@ -150,16 +150,16 @@ class Day24 : AOCSolution {
                             prunedMap.remove(key)
                         }
                     }
-                }
-                // Remove all XOR gates that are correctly connected to two static values (A xor B)
-                // These are correct half adders
-                // Also remove all AND gates that are correctly connected to two static values (A and B)
-                // These are correct halves of the carry bit calculation
-                if (input1 is Gate.Static &&
-                    input2 is Gate.Static &&
-                    value.operation in setOf(Operation.AND, Operation.XOR)
-                ) {
-                    prunedMap.remove(key)
+                    // Remove all XOR gates that are correctly connected to two static values (A xor B)
+                    // These are correct half adders
+                    // Also remove all AND gates that are correctly connected to two static values (A and B)
+                    // These are correct halves of the carry bit calculation
+                    if (input1 is Gate.Static &&
+                        input2 is Gate.Static &&
+                        value.operation in setOf(Operation.AND, Operation.XOR)
+                    ) {
+                        prunedMap.remove(key)
+                    }
                 }
             }
         }
@@ -190,9 +190,9 @@ class Day24 : AOCSolution {
 
         val wrongResult = part1(inputFile).toLong()
         val wireMap = parseInput(inputFile)
-//        val prunedMap = pruneMap(wireMap)
-//
-//        graphvizWireMap(prunedMap, wireMap)
+        val prunedMap = pruneMap(wireMap)
+
+        graphvizWireMap(prunedMap, wireMap)
 
         // Find all x bits and resolve them
         val number1 = wireMap
@@ -247,8 +247,8 @@ class Day24 : AOCSolution {
         wireMap["z09"] = Gate.GateOutput("z09", rkf.operation, rkf.wire1, rkf.wire2)
         wireMap["rkf"] = Gate.GateOutput("rkf", z09.operation, z09.wire1, z09.wire2)
 
-        val prunedMap = pruneMap(wireMap)
-        graphvizWireMap(prunedMap, wireMap)
+//        val prunedMap = pruneMap(wireMap)
+//        graphvizWireMap(prunedMap, wireMap)
 
         // Find all z bits and resolve them
         val bits = wireMap
