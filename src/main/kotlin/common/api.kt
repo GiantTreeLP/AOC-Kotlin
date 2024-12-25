@@ -48,7 +48,7 @@ fun <T> List<List<T>>.transpose(): List<List<T>> {
     } else {
         // Transpose the list
         // For each column, map the list of rows to the column
-        (0 until first.size).map { col -> this.map { it[col] } }
+        first.indices.map { col -> this.map { it[col] } }
     }
 }
 
