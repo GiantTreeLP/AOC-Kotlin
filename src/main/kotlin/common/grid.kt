@@ -1,11 +1,15 @@
 package common
 
+import kotlin.math.min
+
 class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<Triple<Int, Int, T>> {
     private val internalGrid: MutableList<MutableList<T>> = grid
     val width get() = this.internalGrid.firstOrNull()?.size ?: 0
     val height get() = this.internalGrid.size
     val bounds get() = Rectangle(Point(0, 0), Point(this.width.toLong(), this.height.toLong()))
     val values get() = this.internalGrid.flatten()
+
+    val indices = PointProgression(width.toLong(), height.toLong(), 1)
 
     constructor() : this(mutableListOf())
 
@@ -67,6 +71,14 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
         return this.getOrNull(point.x.toInt(), point.y.toInt())
     }
 
+    fun rows(): List<List<T>> {
+        return this.internalGrid.toList()
+    }
+
+    fun columns(): List<List<T>> {
+        return (0 until this.width).map { this.getColumn(it) }
+    }
+
     fun subGrid(x: Int, y: Int, width: Int, height: Int): Grid<T> {
         require(x in 0 until this.width) { "X index out of bounds" }
         require(y in 0 until this.height) { "Y index out of bounds" }
@@ -81,7 +93,7 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     }
 
     fun subGrids(width: Int, height: Int): List<Grid<T>> {
-        return buildList {
+        return buildList(width * height) {
             for (y in 0..(this@Grid.height - height)) {
                 for (x in 0..(this@Grid.width - width)) {
                     add(this@Grid.subGrid(x, y, width, height))
@@ -90,20 +102,42 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
         }
     }
 
+    fun diagonal(offset: Int = 0): List<T> {
+        require(offset <= width) { "Offset must be at most the width of the grid" }
+        if (offset < 0) {
+            require(-offset <= height) { "Offset must be at most the height of the grid" }
+        }
+        val iterator = if (offset >= 0) {
+            // Diagonal / Super-diagonal
+            PointIterator(offset.toLong(), 0, width.toLong(), height.toLong(), width + 1L)
+        } else {
+            // Sub-diagonal
+            PointIterator(0, -offset.toLong(), width.toLong(), height.toLong(), width + 1L)
+        }
+        return buildList {
+            for (point in iterator) {
+                add(this@Grid[point])
+            }
+        }
+    }
+
     fun primaryDiagonals(): List<List<T>> {
         val result = mutableListOf<List<T>>()
 
         // Top left to bottom right
-        val diagonal = mutableListOf<T>()
-        for (i in 0 until this.width) {
-            diagonal.add(this[i, i])
+        val diagonal = buildList(min(width, height)) {
+            for (p in PointIterator(Point(0, 0), this@Grid, width + 1L)) {
+                add(this@Grid[p])
+            }
         }
+
         result.add(diagonal)
 
         // Top right to bottom left
-        val diagonal2 = mutableListOf<T>()
-        for (i in 0 until this.width) {
-            diagonal2.add(this[this.width - i - 1, i])
+        val diagonal2 = buildList(min(width, height)) {
+            for (p in PointIterator(Point(width - 1, 0), this@Grid, width - 1L)) {
+                add(this@Grid[p])
+            }
         }
         result.add(diagonal2)
 
@@ -142,7 +176,15 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     }
 
     inline fun <U> mapIndexed(transform: (point: Point, T) -> U): Grid<U> {
-        return this.mapIndexed { x, y, value -> transform(Point(x.toLong(), y.toLong()), value) }
+        return this.mapIndexed { x, y, value -> transform(Point(x, y), value) }
+    }
+
+    fun flipHorizontal(): Grid<T> {
+        return this.mapIndexed { x, y, _ -> this[this.width - x - 1, y] }
+    }
+
+    fun flipVertical(): Grid<T> {
+        return this.mapIndexed { x, y, _ -> this[x, this.height - y - 1] }
     }
 
     fun toList(): List<List<T>> {
@@ -237,6 +279,49 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
             val grid = Grid<T>()
             this.forEach { grid.addRow(it) }
             return grid
+        }
+    }
+}
+
+class PointProgression(
+    val width: Long,
+    val height: Long,
+    val stride: Long = 1
+) : Iterable<Point> {
+    override fun iterator(): Iterator<Point> {
+        return PointIterator(0, 0, width, height, stride)
+    }
+
+    infix fun step(stride: Long): PointProgression {
+        return PointProgression(width, height, stride)
+    }
+
+}
+
+class PointIterator(
+    x: Long = 0,
+    y: Long = 0,
+    private val width: Long = 0,
+    height: Long = 0,
+    private val stride: Long = 1
+) : Iterator<Point> {
+
+    private var index = y * width + x
+    private val lastIndex = width * height
+
+    constructor(
+        startPoint: Point,
+        grid: Grid<*>,
+        stride: Long = 1
+    ) : this(startPoint.x, startPoint.y, grid.width.toLong(), grid.height.toLong(), stride)
+
+    override fun hasNext(): Boolean {
+        return index < lastIndex
+    }
+
+    override fun next(): Point {
+        return Point(index % width, index / width).also {
+            index += stride
         }
     }
 }

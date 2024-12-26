@@ -5,6 +5,7 @@ import kotlin.math.abs
 typealias Position = Point
 typealias Direction = Point
 
+@JvmRecord
 data class Point(val x: Long, val y: Long) {
     val manhattanDistance get() = abs(x) + abs(y)
 
@@ -38,9 +39,10 @@ data class Point(val x: Long, val y: Long) {
     fun neighbours() = ALL.map { this + it }
 }
 
+@JvmRecord
 data class Rectangle(val topLeft: Point, val bottomRight: Point) {
-    val width = bottomRight.x - topLeft.x
-    val height = bottomRight.y - topLeft.y
+    val width get() = bottomRight.x - topLeft.x
+    val height get() = bottomRight.y - topLeft.y
 
     infix operator fun contains(point: Point) =
         point.x in topLeft.x..<bottomRight.x && point.y in topLeft.y..<bottomRight.y

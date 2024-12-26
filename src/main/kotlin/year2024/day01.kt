@@ -14,7 +14,7 @@ class Day01 : AOCSolution {
 
     override fun part1(inputFile: String): String {
         return readResourceLines(inputFile)
-            .map { it.split(common.splitRegex) }
+            .map { it.split(common.spaceSplitRegex) }
             .map { it.map(String::toInt) }
             .transpose()
             .map { it.sorted() }
@@ -26,7 +26,7 @@ class Day01 : AOCSolution {
 
     override fun part2(inputFile: String): String {
         val lists = readResourceLines(inputFile)
-            .map { it.split(common.splitRegex) }
+            .map { it.split(common.spaceSplitRegex) }
             .map { it.map(String::toInt) }
             .transpose()
         val leftList = lists[0]

@@ -9,8 +9,6 @@ class Day03 : AOCSolution {
     override val year = 2024
     override val day = 3
 
-    val mulRegex = Regex("""mul\((\d{1,3}),(\d{1,3})\)""")
-
     override fun part1(inputFile: String): String {
         val input = readResource(inputFile)
 
@@ -43,5 +41,9 @@ class Day03 : AOCSolution {
         }
 
         return sum.toString()
+    }
+
+    companion object {
+        private val mulRegex = Regex("""mul\((\d{1,3}),(\d{1,3})\)""")
     }
 }

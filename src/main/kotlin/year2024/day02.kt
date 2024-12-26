@@ -3,7 +3,7 @@ package year2024
 import com.google.auto.service.AutoService
 import common.AOCSolution
 import common.readResourceLines
-import common.splitRegex
+import common.spaceSplitRegex
 import common.unzipWithNext
 import kotlin.math.abs
 import kotlin.math.sign
@@ -15,7 +15,7 @@ class Day02 : AOCSolution {
 
     override fun part1(inputFile: String): String {
         val reports = readResourceLines(inputFile)
-            .map { string -> string.split(splitRegex) }
+            .map { string -> string.split(spaceSplitRegex) }
             .map { it.map(String::toInt) }
 
         val result = reports
@@ -27,7 +27,7 @@ class Day02 : AOCSolution {
 
     override fun part2(inputFile: String): String {
         val reports = readResourceLines(inputFile)
-            .map { it.split(splitRegex) }
+            .map { it.split(spaceSplitRegex) }
             .map { it.map(String::toInt) }
 
         val (safe, unsafe) = reports

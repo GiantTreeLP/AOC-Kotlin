@@ -5,7 +5,7 @@ import java.io.InputStream
 import java.net.URL
 import kotlin.math.sqrt
 
-val splitRegex = Regex("""\s+""")
+val spaceSplitRegex = Regex("""\s+""")
 private val twoPartRegex = Regex("""\r?\n\r?\n""")
 
 fun getResource(path: String): URL {
@@ -25,7 +25,7 @@ fun readResource(path: String): String {
 }
 
 fun readResourceLines(path: String): List<String> {
-    return getResourceAsStream(path).bufferedReader().readLines()
+    return getResourceAsStream(path).bufferedReader().readLines().filter { it.isNotEmpty() }
 }
 
 fun readResourceTwoParts(path: String): Pair<String, String> {
@@ -77,8 +77,6 @@ fun <T> List<Pair<T, T>>.unzipWithNext(): List<T> {
     return result
 }
 
-
-fun <T> Iterable<T>.printEach() = onEach { println(it) }
 
 fun <T> List<T>.isSorted(comparator: Comparator<T>): Boolean {
     for (i in 0 until size - 1) {

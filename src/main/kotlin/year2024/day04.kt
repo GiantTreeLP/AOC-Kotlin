@@ -1,64 +1,36 @@
 package year2024
 
 import com.google.auto.service.AutoService
-import common.AOCSolution
-import common.Grid
+import common.*
 import common.Grid.Companion.toGrid
-import common.readResourceLines
 
 @AutoService(AOCSolution::class)
 class Day04 : AOCSolution {
     override val year = 2024
     override val day = 4
 
-    private val xmasRegex = Regex("""XMAS""")
-    private val masRegex = Regex("""MAS|SAM""")
-
-    private fun buildGrids(charArrays: List<CharArray>): List<List<String>> {
-        // Require the grid to be a square
-        require(charArrays.all { it.size == charArrays.size }) { "Grid must be a square" }
-
+    private fun buildGrids(inputGrid: Grid<Char>): List<List<String>> {
         val grids = mutableListOf<List<String>>()
 
         // Horizontal
-        val horizontal = charArrays.map { String(it) }
+        val horizontal = inputGrid.rows().map { it.joinToString("") }
         grids.add(horizontal)
         // Horizontal reversed
         grids.add(horizontal.map(String::reversed))
 
         // Vertical
-        val vertical = charArrays[0].indices.map { i -> charArrays.map { it[i] }.joinToString("") }
+        val vertical = inputGrid.columns().map { it.joinToString("") }
         grids.add(vertical)
         // Vertical reversed
         grids.add(vertical.map(String::reversed))
 
         // Diagonal
         val diagonalTL = mutableListOf<String>()
-        // Top left to bottom right
-        // Rows
-        for (startRow in charArrays.indices) {
-            var x = 0
-            var y = startRow
-            val diagonal = mutableListOf<Char>()
-            while (y < charArrays.size) {
-                diagonal.add(charArrays[y][x])
-                x++
-                y++
-            }
-            diagonalTL.add(diagonal.joinToString(""))
+        for (x in 0 until inputGrid.width) {
+            diagonalTL.add(inputGrid.diagonal(x).joinToString(""))
         }
-
-        // Columns
-        for (startColumn in 1 until charArrays.size) {
-            var x = startColumn
-            var y = 0
-            val diagonal = mutableListOf<Char>()
-            while (x < charArrays.size) {
-                diagonal.add(charArrays[y][x])
-                x++
-                y++
-            }
-            diagonalTL.add(diagonal.joinToString(""))
+        for (y in 1 until inputGrid.height) {
+            diagonalTL.add(inputGrid.diagonal(-y).joinToString(""))
         }
 
         grids.add(diagonalTL)
@@ -66,31 +38,14 @@ class Day04 : AOCSolution {
         grids.add(diagonalTL.map(String::reversed))
 
         // Top right to bottom left
-        val diagonalTR = mutableListOf<String>()
-        // Rows
-        for (startRow in charArrays.indices) {
-            var x = charArrays.size - 1
-            var y = startRow
-            val diagonal = mutableListOf<Char>()
-            while (y < charArrays.size) {
-                diagonal.add(charArrays[y][x])
-                x--
-                y++
+        val reversedGrid = inputGrid.flipVertical()
+        val diagonalTR = buildList(reversedGrid.width + reversedGrid.height - 1) {
+            for (x in 0 until reversedGrid.width) {
+                add(reversedGrid.diagonal(x).joinToString(""))
             }
-            diagonalTR.add(diagonal.joinToString(""))
-        }
-
-        // Columns
-        for (startColumn in charArrays.size - 2 downTo 0) {
-            var x = startColumn
-            var y = 0
-            val diagonal = mutableListOf<Char>()
-            while (x >= 0) {
-                diagonal.add(charArrays[y][x])
-                x--
-                y++
+            for (y in 1 until reversedGrid.height) {
+                add(reversedGrid.diagonal(-y).joinToString(""))
             }
-            diagonalTR.add(diagonal.joinToString(""))
         }
 
         grids.add(diagonalTR)
@@ -104,7 +59,9 @@ class Day04 : AOCSolution {
     override fun part1(inputFile: String): String {
         val input = readResourceLines(inputFile)
 
-        val lines = input.filter { it.isNotEmpty() }.map { it.toCharArray() }
+        val lines = input
+            .map { it.toList() }
+            .toGrid()
 
         val grid = buildGrids(lines)
 
@@ -133,5 +90,10 @@ class Day04 : AOCSolution {
             .count { it == 2 }
 
         return blocks.toString()
+    }
+
+    companion object {
+        private val xmasRegex = Regex("""XMAS""")
+        private val masRegex = Regex("""MAS|SAM""")
     }
 }
