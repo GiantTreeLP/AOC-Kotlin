@@ -2,58 +2,43 @@ package common
 
 import kotlin.math.min
 
-class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<Triple<Int, Int, T>> {
-    private val internalGrid: MutableList<MutableList<T>> = grid
-    val width get() = this.internalGrid.firstOrNull()?.size ?: 0
-    val height get() = this.internalGrid.size
-    val bounds get() = Rectangle(Point(0, 0), Point(this.width.toLong(), this.height.toLong()))
-    val values get() = this.internalGrid.flatten()
+class Grid<T> private constructor(val width: Int, val height: Int, grid: Array<Any?>) : Iterable<Triple<Int, Int, T>> {
+    @Suppress("UNCHECKED_CAST")
+    private val internalGrid: Array<T> = grid as Array<T>
+
+    val bounds = Rectangle(Point(0, 0), Point(this.width, this.height))
+
+    val values get() = this.internalGrid
 
     val indices = PointProgression(width.toLong(), height.toLong(), 1)
 
-    constructor() : this(mutableListOf())
-
-    constructor(width: Int, height: Int, initializer: (x: Int, y: Int) -> T) : this() {
-        for (y in 0 until height) {
-            val row = MutableList(width) { x -> initializer(x, y) }
-            this.addRow(row)
+    constructor(width: Int, height: Int, initializer: (x: Int, y: Int) -> T) : this(
+        width,
+        height,
+        Array<Any?>(width * height) { index ->
+            initializer(index % width, index / width)
         }
-    }
+    )
 
     constructor(width: Int, height: Int, initializer: (Point) -> T) : this(width, height, { x, y ->
         initializer(Point(x.toLong(), y.toLong()))
     })
 
-    fun addRow(row: Iterable<T>) {
-        val mutableRow = row.toMutableList()
-        require(mutableRow.size == this.width || this.width == 0) { "Row size must match the grid width" }
-        this.internalGrid.add(mutableRow)
-    }
-
-    fun addColumn(column: List<T>) {
-        require(column.size == this.height || this.height == 0) { "Column size must match the grid height" }
-        column.forEachIndexed { index, value ->
-            if (index >= this.internalGrid.size) {
-                this.internalGrid.add(mutableListOf())
-            }
-            this.internalGrid[index].add(value)
-        }
-    }
-
-    fun getRow(index: Int): List<T> {
+    fun getRow(index: Int): Array<T> {
         require(index in 0 until this.height) { "Row index out of bounds" }
-        return this.internalGrid[index]
+        return this.internalGrid.copyOfRange(index * this.width, (index + 1) * this.width)
     }
 
     fun getColumn(index: Int): List<T> {
         require(index in 0 until this.width) { "Column index out of bounds" }
-        return this.internalGrid.map { it[index] }
+        @Suppress("UNCHECKED_CAST")
+        return (0 until this.height).map { row -> this.internalGrid[row * this.width + index] }
     }
 
     operator fun get(x: Int, y: Int): T {
         require(x in 0 until this.width) { "X index out of bounds" }
         require(y in 0 until this.height) { "Y index out of bounds" }
-        return this.internalGrid[y][x]
+        return this.internalGrid[y * this.width + x]
     }
 
     operator fun get(point: Point): T {
@@ -64,7 +49,7 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
         if (x !in 0 until this.width || y !in 0 until this.height) {
             return null
         }
-        return this.internalGrid[y][x]
+        return this.internalGrid[y * this.width + x]
     }
 
     fun getOrNull(point: Point): T? {
@@ -72,7 +57,7 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     }
 
     fun rows(): List<List<T>> {
-        return this.internalGrid.toList()
+        return this.internalGrid.asList().chunked(this.width)
     }
 
     fun columns(): List<List<T>> {
@@ -85,9 +70,8 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
         require(x + width <= this.width) { "Subgrid width out of bounds" }
         require(y + height <= this.height) { "Subgrid height out of bounds" }
 
-        val subGrid = Grid<T>()
-        for (dy in 0 until height) {
-            subGrid.addRow(this.internalGrid[y + dy].subList(x, x + width))
+        val subGrid = Grid(width, height) { dx, dy ->
+            this[y + dy, x + dx]
         }
         return subGrid
     }
@@ -145,37 +129,22 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     }
 
     operator fun set(x: Int, y: Int, value: T) {
-        // Add empty rows if necessary
-        if (this.internalGrid.size <= y) {
-            this.internalGrid.addAll(List(y - this.internalGrid.size + 1) { mutableListOf() })
-        }
-
-        // Add empty columns if necessary
-        if (this.internalGrid[y].size <= x) {
-            this.internalGrid[y].addAll(List(x - this.internalGrid[y].size + 1) {
-                @Suppress("UNCHECKED_CAST")
-                null as T
-            })
-        }
-
         require(x in 0 until this.width) { "X index out of bounds" }
         require(y in 0 until this.height) { "Y index out of bounds" }
-        this.internalGrid[y][x] = value
+        this.internalGrid[y * this.width + x] = value
     }
 
     operator fun set(point: Point, value: T) {
         this[point.x.toInt(), point.y.toInt()] = value
     }
 
-    inline fun <U> mapIndexed(transform: (x: Int, y: Int, T) -> U): Grid<U> {
-        val newGrid = Grid<U>()
-        for ((x, y, value) in this) {
-            newGrid[x, y] = transform(x, y, value)
+    inline fun <U> mapIndexed(crossinline transform: (x: Int, y: Int, T) -> U): Grid<U> {
+        return Grid(width, height) { x, y ->
+            transform(x, y, this[x, y])
         }
-        return newGrid
     }
 
-    inline fun <U> mapIndexed(transform: (point: Point, T) -> U): Grid<U> {
+    inline fun <U> mapIndexed(crossinline transform: (point: Point, T) -> U): Grid<U> {
         return this.mapIndexed { x, y, value -> transform(Point(x, y), value) }
     }
 
@@ -188,20 +157,16 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
     }
 
     fun toList(): List<List<T>> {
-        return this.internalGrid.map { it.toList() }.toList()
+        return this.internalGrid.asList().chunked(this.width)
     }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is Grid<*>) return false
 
-        if (this.internalGrid != other.internalGrid) return false
+        if (!this.internalGrid.contentEquals(other.internalGrid)) return false
 
         return true
-    }
-
-    fun copy(): Grid<T> {
-        return Grid(this.toList().map { it.toMutableList() }.toMutableList())
     }
 
     override fun hashCode(): Int {
@@ -212,15 +177,15 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
         return buildString {
             this.appendLine("Grid(${this@Grid.width} x ${this@Grid.height}) [")
 
-            val strings = this@Grid.internalGrid.map { row -> row.map { it.toString() } }
-            val maxElementWidth = strings.flatten().maxOfOrNull { it.length } ?: 0
+            val strings = this@Grid.internalGrid.map { it.toString() }
+            val maxElementWidth = strings.maxOfOrNull { it.length } ?: 0
 
-            for (row in strings) {
+            for (rowIndex in 0 until height) {
                 this.append("  [")
-                for (i in row.indices) {
-                    val element = row[i]
+                for (i in 0 until width) {
+                    val element = strings[rowIndex + i * width]
                     this.append(element.padStart(maxElementWidth))
-                    if (i < row.size - 1) {
+                    if (i < width - 1) {
                         this.append(" ")
                     }
                 }
@@ -267,18 +232,10 @@ class Grid<T> private constructor(grid: MutableList<MutableList<T>>) : Iterable<
 
 
     companion object {
-        /**
-         * Creates a grid from a list of lists.
-         * Changes to the list will be reflected in the grid and vice versa.
-         */
-        fun <T> MutableList<MutableList<T>>.asGrid(): Grid<T> {
-            return Grid(this)
-        }
-
         fun <T> Iterable<Iterable<T>>.toGrid(): Grid<T> {
-            val grid = Grid<T>()
-            this.forEach { grid.addRow(it) }
-            return grid
+            val outer = this.toList()
+            val width = outer.firstOrNull()?.count() ?: 0
+            return Grid(width, outer.size) { x, y -> outer[y].elementAt(x) }
         }
     }
 }
@@ -299,20 +256,14 @@ class PointProgression(
 }
 
 class PointIterator(
-    x: Long = 0,
-    y: Long = 0,
-    private val width: Long = 0,
-    height: Long = 0,
-    private val stride: Long = 1
+    x: Long = 0, y: Long = 0, private val width: Long = 0, height: Long = 0, private val stride: Long = 1
 ) : Iterator<Point> {
 
     private var index = y * width + x
     private val lastIndex = width * height
 
     constructor(
-        startPoint: Point,
-        grid: Grid<*>,
-        stride: Long = 1
+        startPoint: Point, grid: Grid<*>, stride: Long = 1
     ) : this(startPoint.x, startPoint.y, grid.width.toLong(), grid.height.toLong(), stride)
 
     override fun hasNext(): Boolean {

@@ -9,9 +9,10 @@ class Day06 : AOCSolution {
     override val year = 2024
     override val day = 6
 
-    private data class State(var position: Position, var direction: Direction) {
+    private data class State(var x: Int, var y: Int, var direction: Direction) {
         fun moveForward() {
-            position += direction
+            x += direction.x.toInt()
+            y += direction.y.toInt()
         }
 
         fun turnRight() {
@@ -21,24 +22,25 @@ class Day06 : AOCSolution {
 
     private fun findGuardPosition(map: Grid<Char>): State {
         map.first { (_, _, cell) -> cell == GUARD }
-            .let { (x, y, _) -> return State(Position(x, y), Direction.UP) }
+            .let { (x, y, _) -> return State(x, y, Direction.UP) }
     }
 
     private fun simulateGuard(startState: State, map: Grid<Char>) {
         val state = startState.copy()
-        while (state.position in map.bounds) {
+        val bounds = map.bounds
+
+        while (state.x in 0 until bounds.width && state.y in 0 until bounds.height) {
             val nextState = state.copy().apply(State::moveForward)
 
-            if (nextState.position !in map.bounds) {
-                map[state.position] = VISITED
-                state.moveForward()
+            if (nextState.x !in 0 until bounds.width || nextState.y !in 0 until bounds.height) {
+                map[state.x, state.y] = VISITED
                 break
             }
 
-            when (map[nextState.position]) {
+            when (map[nextState.x, nextState.y]) {
                 // Free
                 FREE, VISITED -> {
-                    map[state.position] = VISITED
+                    map[state.x, state.y] = VISITED
                     state.moveForward()
                 }
                 // Obstruction
@@ -66,46 +68,40 @@ class Day06 : AOCSolution {
     }
 
     override fun part2(inputFile: String): String {
-        val originalMap = readResourceLines(inputFile)
+        val map = readResourceLines(inputFile)
             .map { it.toList() }
             .toGrid()
 
         // Find the guard's starting position
         // The direction is always north
-        val startState = findGuardPosition(originalMap)
+        val startState = findGuardPosition(map)
 
         // Fill the map with the guard's path
-        simulateGuard(startState, originalMap)
+        simulateGuard(startState, map)
         // Restore the guard at the starting position
-        originalMap[startState.position] = GUARD
+        map[startState.x, startState.y] = GUARD
 
-        val cycles = mutableListOf<Set<Vertex<State>>>()
+        var cycles = 0
+        val bounds = map.bounds
+        val history = mutableListOf<State>()
 
-        // Try putting an obstruction on every free cell
         // This approach is not efficient, but it works
-        originalMap
+        map
             // Put an obstruction on each cell the guard has visited
             .filter { (_, _, cell) -> cell == VISITED }
-            .forEach { (x, y, _) ->
-                val map = originalMap.copy()
+            .forEach { (x, y, c) ->
+                // Save the original cell
+                val oldChar = c
                 map[x, y] = OBSTRUCTION_NEW
 
                 val state = startState.copy()
-
-                val adjacencyList = AdjacencyList<State>()
-                val vertices = Grid(map.width, map.height) { (x, y) ->
-                    mutableMapOf<Direction, Vertex<State>>()
-                }
-                vertices[startState.position][startState.direction] = adjacencyList.createVertex(startState)
-                val startVertex = vertices[startState.position][startState.direction]!!
-
-                var lastTurn = startVertex
+                history.clear()
 
                 // We either encounter a cycle or we exit the map
-                while (state.position in map.bounds) {
+                while (state.x in 0 until bounds.width && state.y in 0 until bounds.height) {
                     val nextState = state.copy().apply(State::moveForward)
 
-                    when (map.getOrNull(nextState.position)) {
+                    when (map.getOrNull(nextState.x, nextState.y)) {
                         // Free
                         FREE, VISITED, GUARD -> {
                             state.moveForward()
@@ -113,16 +109,9 @@ class Day06 : AOCSolution {
                         // Obstruction
                         OBSTRUCTION_OLD, OBSTRUCTION_NEW -> {
                             state.turnRight()
-                            val v = vertices[state.position].getOrPut(state.direction) {
-                                adjacencyList.createVertex(state.copy())
-                            }
-                            adjacencyList.addDirectedEdge(lastTurn, v)
-                            lastTurn = v
-
-                            // Check for circular path
-                            val cycle = adjacencyList.getCycle(startVertex)
-                            if (cycle != null) {
-                                cycles.add(cycle)
+                            history.addLast(state.copy())
+                            if (history.indexOf(state) < history.lastIndex) {
+                                cycles++
                                 break
                             }
                         }
@@ -132,9 +121,12 @@ class Day06 : AOCSolution {
                         }
                     }
                 }
+
+                // Restore the original cell
+                map[x, y] = oldChar
             }
 
-        return cycles.size.toString()
+        return cycles.toString()
     }
 
     companion object {

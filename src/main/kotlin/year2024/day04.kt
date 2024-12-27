@@ -13,7 +13,7 @@ class Day04 : AOCSolution {
         val grids = mutableListOf<List<String>>()
 
         // Horizontal
-        val horizontal = inputGrid.rows().map { it.joinToString("") }
+        val horizontal = inputGrid.toList().map { it.joinToString("") }
         grids.add(horizontal)
         // Horizontal reversed
         grids.add(horizontal.map(String::reversed))
