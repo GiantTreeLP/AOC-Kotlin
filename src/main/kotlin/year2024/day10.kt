@@ -2,8 +2,9 @@ package year2024
 
 import com.google.auto.service.AutoService
 import common.AOCSolution
-import common.Grid
-import common.Grid.Companion.toGrid
+import common.grid.Grid
+import common.grid.mapIndexed
+import common.grid.toGrid
 import common.readResourceLines
 
 @AutoService(AOCSolution::class)

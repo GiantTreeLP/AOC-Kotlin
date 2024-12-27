@@ -2,7 +2,8 @@ package year2024
 
 import com.google.auto.service.AutoService
 import common.*
-import common.Grid.Companion.toGrid
+import common.grid.Grid
+import common.grid.toGrid
 
 @AutoService(AOCSolution::class)
 class Day06 : AOCSolution {

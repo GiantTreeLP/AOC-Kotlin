@@ -2,7 +2,9 @@ package year2024
 
 import com.google.auto.service.AutoService
 import common.*
-import common.Grid.Companion.toGrid
+import common.grid.DefaultGrid
+import common.grid.Grid
+import common.grid.toGrid
 import kotlin.math.abs
 import kotlin.math.min
 
@@ -30,7 +32,7 @@ class Day20 : AOCSolution {
      */
     private fun calculateDistances(track: Grid<Cell>, start: Cell, end: Cell): Pair<Grid<Int>, Grid<Int>> {
         val bounds = track.bounds
-        val distanceToStart = Grid(track.width, track.height) { _, _ -> Int.MAX_VALUE }
+        val distanceToStart = DefaultGrid.filled(track.width, track.height, Int.MAX_VALUE)
 
         var currentCell = start
         var currentDistance = 0
@@ -52,7 +54,7 @@ class Day20 : AOCSolution {
         }
 
         val totalDistance = distanceToStart[end.position]
-        val distanceToEnd = Grid(track.width, track.height) { position ->
+        val distanceToEnd = DefaultGrid(track.width, track.height) { position ->
             val distance = distanceToStart[position]
             if (distance == Int.MAX_VALUE) {
                 Int.MAX_VALUE

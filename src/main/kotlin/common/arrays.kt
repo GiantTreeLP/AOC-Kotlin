@@ -17,3 +17,7 @@ inline fun IntArray.mapWindowed(size: Int, transform: (array: IntArray, from: In
         transform(this, it, it + size)
     }
 }
+
+inline fun <reified T, reified U> Array<T>.mapArray(transform: (T) -> U): Array<U> {
+    return Array(this.size) { transform(this[it]) }
+}

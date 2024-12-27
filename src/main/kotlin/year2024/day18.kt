@@ -1,7 +1,11 @@
 package year2024
 
 import com.google.auto.service.AutoService
-import common.*
+import common.AOCSolution
+import common.Point
+import common.Position
+import common.grid.DefaultGrid
+import common.readResourceLines
 import java.util.*
 
 @AutoService(AOCSolution::class)
@@ -16,7 +20,7 @@ class Day18 : AOCSolution {
 
     private fun solveMaze(width: Int, height: Int, cutOff: Int, coordinates: List<Point>): Long {
         val coordinatesSlice = coordinates.take(cutOff)
-        val memorySpace = Grid(width, height) { point ->
+        val memorySpace = DefaultGrid(width, height) { point ->
             if (coordinatesSlice.contains(point)) {
                 Cell.Wall(point)
             } else {

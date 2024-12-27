@@ -1,74 +1,83 @@
 package year2024
 
 import com.google.auto.service.AutoService
-import common.*
-import common.Grid.Companion.toGrid
+import common.AOCSolution
+import common.count
+import common.grid.*
+import common.mapArray
+import common.readResourceLines
 
 @AutoService(AOCSolution::class)
 class Day04 : AOCSolution {
     override val year = 2024
     override val day = 4
 
-    private fun buildGrids(inputGrid: Grid<Char>): List<List<String>> {
-        val grids = mutableListOf<List<String>>()
+    private fun buildGrids(inputGrid: Grid<Char>): Array<String> {
+
 
         // Horizontal
-        val horizontal = inputGrid.toList().map { it.joinToString("") }
-        grids.add(horizontal)
-        // Horizontal reversed
-        grids.add(horizontal.map(String::reversed))
+        val horizontal = inputGrid.toStrings()
 
         // Vertical
-        val vertical = inputGrid.columns().map { it.joinToString("") }
-        grids.add(vertical)
-        // Vertical reversed
-        grids.add(vertical.map(String::reversed))
+        val vertical = inputGrid.transposed().toStrings()
 
         // Diagonal
-        val diagonalTL = mutableListOf<String>()
-        for (x in 0 until inputGrid.width) {
-            diagonalTL.add(inputGrid.diagonal(x).joinToString(""))
+        val diagonalTL = Array(inputGrid.width + inputGrid.height - 1) { index ->
+            inputGrid.diagonal(index - inputGrid.height + 1).joinToString("")
         }
-        for (y in 1 until inputGrid.height) {
-            diagonalTL.add(inputGrid.diagonal(-y).joinToString(""))
-        }
-
-        grids.add(diagonalTL)
-        // Diagonal reversed
-        grids.add(diagonalTL.map(String::reversed))
 
         // Top right to bottom left
         val reversedGrid = inputGrid.flipVertical()
-        val diagonalTR = buildList(reversedGrid.width + reversedGrid.height - 1) {
-            for (x in 0 until reversedGrid.width) {
-                add(reversedGrid.diagonal(x).joinToString(""))
-            }
-            for (y in 1 until reversedGrid.height) {
-                add(reversedGrid.diagonal(-y).joinToString(""))
-            }
+        val diagonalTR = Array(reversedGrid.width + reversedGrid.height - 1) { index ->
+            reversedGrid.diagonal(index - reversedGrid.height + 1).joinToString("")
         }
 
-        grids.add(diagonalTR)
-        // Diagonal reversed
-        grids.add(diagonalTR.map(String::reversed))
+        val result = arrayOfNulls<String>(
+            2 * inputGrid.width + 2 * inputGrid.height +
+                    4 * (inputGrid.width + inputGrid.height - 1)
+        )
 
-        return grids
+        val width = inputGrid.width
+        val height = inputGrid.height
+        val diagonalLength = width + height - 1
+
+        horizontal.copyInto(result, 0)
+        horizontal.mapArray(String::reversed).copyInto(result, height)
+
+        vertical.copyInto(result, 2 * height)
+        vertical.mapArray(String::reversed).copyInto(result, 2 * height + width)
+
+        diagonalTL.copyInto(result, 2 * height + 2 * width)
+        diagonalTL.mapArray(String::reversed).copyInto(result, 2 * height + 2 * width + diagonalLength)
+
+        diagonalTR.copyInto(result, 2 * height + 2 * width + 2 * diagonalLength)
+        diagonalTR.mapArray(String::reversed).copyInto(result, 2 * height + 2 * width + 3 * diagonalLength)
+
+        // We can safely cast the array to Array<String> because we know that all elements are non-null
+        @Suppress("UNCHECKED_CAST")
+        return result as Array<String>
     }
 
 
     override fun part1(inputFile: String): String {
         val input = readResourceLines(inputFile)
 
-        val lines = input
-            .map { it.toList() }
-            .toGrid()
+        val lines = input.map { it.toList() }.toGrid()
 
         val grid = buildGrids(lines)
 
-        val count = grid
-            .map { order -> order.map { slice -> xmasRegex.findAll(slice).count() } }
-            .flatten()
-            .sum()
+        val count = grid.sumOf {
+            var count = 0
+            var lastIndex = 0
+            while (lastIndex != -1) {
+                lastIndex = it.indexOf(XMAS, lastIndex)
+                if (lastIndex != -1) {
+                    count++
+                    lastIndex += XMAS.length
+                }
+            }
+            count
+        }
 
         return count.toString()
     }
@@ -76,24 +85,23 @@ class Day04 : AOCSolution {
     override fun part2(inputFile: String): String {
         val input = readResourceLines(inputFile)
 
-        val grid = input
-            .filter { it.isNotEmpty() }
-            .map { it.toList() }
-            .toGrid()
+        val grid = input.map { it.toList() }.toGrid()
 
         // Iterate each 3x3 grid
         val blocks = grid
             .subGrids(3, 3)
-            .map(Grid<Char>::primaryDiagonals)
-            .map { diagonals -> diagonals.map { diagonalChars -> diagonalChars.joinToString("") } }
-            .map { diagonals -> diagonals.sumOf { diagonal -> masRegex.findAll(diagonal).count() } }
-            .count { it == 2 }
+            .count { subGrid ->
+                subGrid.primaryDiagonals().count { diagonal ->
+                    diagonal[1] == 'A' &&
+                            ((diagonal[0] == 'M' && diagonal[2] == 'S') ||
+                                    (diagonal[0] == 'S' && diagonal[2] == 'M'))
+                } == 2
+            }
 
         return blocks.toString()
     }
 
     companion object {
-        private val xmasRegex = Regex("""XMAS""")
-        private val masRegex = Regex("""MAS|SAM""")
+        private const val XMAS = "XMAS"
     }
 }
