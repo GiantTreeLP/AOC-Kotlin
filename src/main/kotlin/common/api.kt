@@ -91,34 +91,14 @@ fun <K, V> Sequence<Pair<K, V>>.toMultiMap(): Map<K, List<V>> {
     return this.groupBy({ it.first }, { it.second })
 }
 
-fun <T : Number> Iterable<T>.mean(): Double {
+fun DoubleArray.variance(): Double {
+    val mean = average()
     var sum = 0.0
     var count = 0
     for (element in this) {
-        sum += element.toDouble()
-        count++
-        if (count < 0) {
-            throw ArithmeticException("Count overflow")
-        }
-    }
-    return if (count > 0) {
-        sum / count
-    } else {
-        Double.NaN
-    }
-}
-
-fun <T : Number> Iterable<T>.variance(): Double {
-    val mean = mean()
-    var sum = 0.0
-    var count = 0
-    for (element in this) {
-        val diff = element.toDouble() - mean
+        val diff = element - mean
         sum += diff * diff
         count++
-        if (count < 0) {
-            throw ArithmeticException("Count overflow")
-        }
     }
     return if (count > 1) {
         sum / (count - 1)
@@ -127,6 +107,6 @@ fun <T : Number> Iterable<T>.variance(): Double {
     }
 }
 
-fun <T : Number> Iterable<T>.standardDeviation(): Double {
+fun DoubleArray.standardDeviation(): Double {
     return sqrt(variance())
 }

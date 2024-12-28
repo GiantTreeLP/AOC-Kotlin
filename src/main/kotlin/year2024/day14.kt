@@ -61,31 +61,32 @@ class Day14 : AOCSolution {
     }
 
     override fun part2(inputFile: String): String {
-        val robots = readResourceLines(inputFile).map(::parseRobot)
+        val robots = readResourceLines(inputFile).map(::parseRobot).toTypedArray()
         val width = if (inputFile.endsWith("sample")) SAMPLE_WIDTH else WIDTH
         val height = if (inputFile.endsWith("sample")) SAMPLE_HEIGHT else HEIGHT
 
-        // Simulate the robots moving
-        var state = robots
+        val windowSize = (width * height).toInt()
 
-        val variancesX = mutableListOf<Double>()
-        val variancesY = mutableListOf<Double>()
-        val states = mutableListOf<List<Robot>>()
+        val xPositions = DoubleArray(robots.size)
+        val yPositions = DoubleArray(robots.size)
+
+        val variancesX = DoubleArray(windowSize)
+        val variancesY = DoubleArray(windowSize)
 
         // Iterate over frames
-        val windowSize = (width * height).toInt()
-        repeat(windowSize) {
-            state = state.map {
-                Robot(it.position.addModulo(it.velocity, width, height), it.velocity)
+        repeat(windowSize) { iteration ->
+            // Move the robots to the next frame
+            for (index in robots.indices) {
+                val robot = robots[index]
+                xPositions[index] = ((robot.position.x + iteration * robot.velocity.x) modulo width).toDouble()
+                yPositions[index] = ((robot.position.y + iteration * robot.velocity.y) modulo height).toDouble()
             }
 
-            states.add(state)
-
             // Calculate the variance of the x and y coordinates
-            val xVariance = state.map { it.position.x }.variance()
-            val yVariance = state.map { it.position.y }.variance()
-            variancesX.add(xVariance)
-            variancesY.add(yVariance)
+            val xVariance = xPositions.variance()
+            val yVariance = yPositions.variance()
+            variancesX[iteration] = xVariance
+            variancesY[iteration] = yVariance
         }
 
         // Check if the variance of the x and y coordinates is within 1 standard deviation of the mean
@@ -101,7 +102,7 @@ class Day14 : AOCSolution {
                 yVariance !in yMean - ySD..yMean + ySD
             ) {
                 // We have found an outlier
-                return (index + 1).toString()
+                return index.toString()
             }
         }
         return "No outlier found"
@@ -115,10 +116,6 @@ class Day14 : AOCSolution {
         private const val HEIGHT = 103L
 
         private val robotRegex = Regex("""p=(-?\d+),(-?\d+) v=(-?\d+),(-?\d+)""")
-
-        private fun Point.addModulo(other: Point, width: Long, height: Long): Point {
-            return Point((x + other.x) modulo width, (y + other.y) modulo height)
-        }
 
         private infix fun Long.modulo(divisor: Long): Long {
             val result = this % divisor
