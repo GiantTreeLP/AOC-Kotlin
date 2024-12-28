@@ -1,14 +1,14 @@
 package common.grid
 
-class GridIterator<T : Any>(private val grid: Grid<T>) : Iterator<Triple<Int, Int, T>> {
+class GridIterator<T : Any>(private val grid: Grid<T>) : Iterator<T> {
     private val width = this.grid.width
     private val height = this.grid.height
     private var x = 0
     private var y = 0
 
-    override fun next(): Triple<Int, Int, T> {
+    override fun next(): T {
         if (!this.hasNext()) throw NoSuchElementException()
-        val value = Triple(this.x, this.y, this.grid[this.x, this.y])
+        val value = this.grid[this.x, this.y]
         this.x++
         if (this.x >= this.width) {
             this.x = 0

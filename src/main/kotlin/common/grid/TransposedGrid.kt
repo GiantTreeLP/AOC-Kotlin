@@ -3,7 +3,7 @@ package common.grid
 import common.Point
 import common.Rectangle
 
-class TransposedGrid<T : Any>(private val grid: Grid<T>) : Grid<T>, Iterable<Triple<Int, Int, T>> {
+class TransposedGrid<T : Any>(private val grid: Grid<T>) : Grid<T>, Iterable<T> {
     override val width = this.grid.height
     override val height = this.grid.width
     override val bounds = Rectangle(Point(0, 0), Point(this.width, this.height))
@@ -50,8 +50,8 @@ class TransposedGrid<T : Any>(private val grid: Grid<T>) : Grid<T>, Iterable<Tri
 
     override fun pointIterator(): Iterator<Pair<Point, T>> {
         return iterator {
-            for ((x, y, value) in this@TransposedGrid) {
-                yield(Point(x.toLong(), y.toLong()) to value)
+            for (point in this@TransposedGrid.indices) {
+                yield(point to this@TransposedGrid[point])
             }
         }
     }

@@ -4,6 +4,7 @@ import com.google.auto.service.AutoService
 import common.*
 import common.grid.DefaultGrid
 import common.grid.Grid
+import common.grid.map
 import common.grid.toGrid
 import kotlin.math.abs
 import kotlin.math.min
@@ -54,14 +55,21 @@ class Day20 : AOCSolution {
         }
 
         val totalDistance = distanceToStart[end.position]
-        val distanceToEnd = DefaultGrid(track.width, track.height) { position ->
-            val distance = distanceToStart[position]
+        val distanceToEnd = distanceToStart.map { distance ->
             if (distance == Int.MAX_VALUE) {
                 Int.MAX_VALUE
             } else {
                 totalDistance - distance
             }
         }
+//        val distanceToEnd = DefaultGrid(track.width, track.height) { position ->
+//            val distance = distanceToStart[position]
+//            if (distance == Int.MAX_VALUE) {
+//                Int.MAX_VALUE
+//            } else {
+//                totalDistance - distance
+//            }
+//        }
         return distanceToStart to distanceToEnd
     }
 
@@ -93,8 +101,10 @@ class Day20 : AOCSolution {
     ): Int {
         val bounds = track.bounds
 
-        return track.sumOf { (_, _, cell) ->
-            cheatVectors.count { vector ->
+        var goodCheatVectors = 0
+
+        track.forEach { cell ->
+            cheatVectors.forEach { vector ->
                 val destination = cell.position + vector
                 // Check if the destination is within bounds and not a wall
                 // This makes sure our cheat vector is valid and doesn't end up in a wall
@@ -114,12 +124,14 @@ class Day20 : AOCSolution {
                             distanceFieldEnd[cell.position],
                             distanceFieldEnd[destination]
                         ) + vector.manhattanDistance
-                    referenceDistance - distance >= MINIMUM_SAVED_PICOSECONDS
-                } else {
-                    false
+                    if (referenceDistance - distance >= MINIMUM_SAVED_PICOSECONDS) {
+                        goodCheatVectors++
+                    }
                 }
             }
         }
+
+        return goodCheatVectors
     }
 
     private data class TrackAndCheatVectors(

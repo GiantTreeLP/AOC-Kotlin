@@ -104,7 +104,7 @@ class Day10 : AOCSolution {
         val trails = parseTrails(inputFile)
 
         // Find the peaks of each trailhead
-        val trailheads = trails.filter { it.third is Cell.Trailhead }.map { it.third as Cell.Trailhead }
+        val trailheads = trails.filterIsInstance<Cell.Trailhead>()
         for (trailhead in trailheads) {
             val paths = findAllPathsPart1(trailhead, trails)
             trailhead.destinations.addAll(paths)
@@ -120,7 +120,7 @@ class Day10 : AOCSolution {
         val trails = parseTrails(inputFile)
 
         // Find the peaks of each trailhead
-        val trailheads = trails.filter { it.third is Cell.Trailhead }.map { it.third as Cell.Trailhead }
+        val trailheads = trails.filterIsInstance<Cell.Trailhead>()
         for (trailhead in trailheads) {
             val paths = findAllPathsPart2(trailhead, trails)
             trailhead.destinations.addAll(paths)

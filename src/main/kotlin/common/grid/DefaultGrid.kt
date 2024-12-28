@@ -122,8 +122,8 @@ class DefaultGrid<T : Any>(
 
     override fun pointIterator(): Iterator<Pair<Point, T>> {
         return iterator {
-            for ((x, y, value) in this@DefaultGrid) {
-                yield(Point(x.toLong(), y.toLong()) to value)
+            for (point in this@DefaultGrid.indices) {
+                yield(point to this@DefaultGrid[point])
             }
         }
     }

@@ -4,7 +4,7 @@ import common.Point
 import common.Rectangle
 import kotlin.math.min
 
-interface Grid<T : Any> : Iterable<Triple<Int, Int, T>> {
+interface Grid<T : Any> : Iterable<T> {
     val width: Int
     val height: Int
     val bounds: Rectangle
@@ -23,7 +23,7 @@ interface Grid<T : Any> : Iterable<Triple<Int, Int, T>> {
 
     fun transposed(): Grid<T>
 
-    override fun iterator(): Iterator<Triple<Int, Int, T>> = GridIterator(this)
+    override fun iterator(): Iterator<T> = GridIterator(this)
     fun pointIterator(): Iterator<Pair<Point, T>>
     fun firstSample() = this.values.first()
 }

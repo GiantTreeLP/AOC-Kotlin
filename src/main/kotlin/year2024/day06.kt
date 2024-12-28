@@ -22,8 +22,13 @@ class Day06 : AOCSolution {
     }
 
     private fun findGuardPosition(map: Grid<Char>): State {
-        map.first { (_, _, cell) -> cell == GUARD }
-            .let { (x, y, _) -> return State(x, y, Direction.UP) }
+        for (p in map.indices) {
+            if (map[p] == GUARD) {
+                val (x, y) = p
+                return State(x.toInt(), y.toInt(), Direction.UP)
+            }
+        }
+        error("Guard not found")
     }
 
     private fun simulateGuard(startState: State, map: Grid<Char>) {
@@ -63,7 +68,7 @@ class Day06 : AOCSolution {
 
         simulateGuard(state, map)
 
-        val result = map.count { (_, _, c) -> c == VISITED }
+        val result = map.count { c -> c == VISITED }
 
         return result.toString()
     }
@@ -89,8 +94,10 @@ class Day06 : AOCSolution {
         // This approach is not efficient, but it works
         map
             // Put an obstruction on each cell the guard has visited
-            .filter { (_, _, cell) -> cell == VISITED }
-            .forEach { (x, y, c) ->
+            .filter { cell -> cell == VISITED }
+            .forEachIndexed { index, c ->
+                val x = (index % bounds.width).toInt()
+                val y = (index / bounds.width).toInt()
                 // Save the original cell
                 val oldChar = c
                 map[x, y] = OBSTRUCTION_NEW

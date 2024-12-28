@@ -68,7 +68,7 @@ class Day15 : AOCSolution {
     }
 
     private fun findRobot(map: Grid<Cell>) =
-        map.first { it.third is Cell.Robot }.third as Cell.Robot
+        map.first { it is Cell.Robot } as Cell.Robot
 
     private fun canMoveBoxVertical(map: Grid<Cell>, cell: Cell, direction: Point): Boolean {
         val newPosition = cell.position + direction
@@ -203,8 +203,8 @@ class Day15 : AOCSolution {
         simulateRobot(map, moves)
 
         val boxesSum = map.sumOf {
-            if (it.third is Cell.Box) {
-                it.third.position.x + it.third.position.y * 100
+            if (it is Cell.Box) {
+                it.position.x + it.position.y * 100
             } else {
                 0
             }
@@ -234,8 +234,8 @@ class Day15 : AOCSolution {
 
         // The solution is the same as in part 1, we just need to look at the left half of each box
         val boxesSum = map.sumOf {
-            if (it.third is Cell.Box.Left) {
-                it.third.position.x + it.third.position.y * 100
+            if (it is Cell.Box.Left) {
+                it.position.x + it.position.y * 100
             } else {
                 0
             }

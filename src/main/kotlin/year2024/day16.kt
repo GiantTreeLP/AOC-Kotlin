@@ -42,8 +42,8 @@ class Day16 : AOCSolution {
         }.toGrid()
 
         // Find the start and end cells
-        val start = maze.first { it.third is Cell.Start }.third
-        val end = maze.first { it.third is Cell.End }.third
+        val start = maze.first { it is Cell.Start }
+        val end = maze.first { it is Cell.End }
         return Triple(maze, start, end)
     }
 
