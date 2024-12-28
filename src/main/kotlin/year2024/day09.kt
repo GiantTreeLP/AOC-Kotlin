@@ -3,6 +3,8 @@ package year2024
 import com.google.auto.service.AutoService
 import common.AOCSolution
 import common.readResource
+import kotlin.math.max
+import kotlin.math.min
 
 @AutoService(AOCSolution::class)
 class Day09 : AOCSolution {
@@ -18,28 +20,37 @@ class Day09 : AOCSolution {
     override fun part1(inputFile: String): String {
         val inputDiskMap = readResource(inputFile).trim()
 
-        val expandedDiskMap = buildList {
-            inputDiskMap.forEachIndexed { index, size ->
-                if (index % 2 == 0) {
-                    repeat(size.digitToInt()) {
-                        add(Cell.File((index / 2).toLong(), 1))
-                    }
-                } else {
-                    repeat(size.digitToInt()) {
-                        add(Cell.FreeSpace(1))
-                    }
+        var diskMapSize = 0
+
+        for (i in inputDiskMap.indices) {
+            diskMapSize += inputDiskMap[i].digitToInt()
+        }
+
+        val expandedDiskMap = IntArray(diskMapSize)
+
+        var arrayIndex = 0
+        for (index in inputDiskMap.indices) {
+            val size = inputDiskMap[index]
+            if (index and 1 == 0) {
+                val fileId = index / 2
+                repeat(size.digitToInt()) {
+                    expandedDiskMap[arrayIndex++] = fileId
+                }
+            } else {
+                repeat(size.digitToInt()) {
+                    expandedDiskMap[arrayIndex++] = FREE_SPACE_ID
                 }
             }
-        }.toMutableList()
+        }
 
         var lastInsertion = 0
         for (i in expandedDiskMap.indices.reversed()) {
             val block = expandedDiskMap[i]
-            if (block is Cell.File) {
+            if (block != FREE_SPACE_ID) {
                 for (j in lastInsertion until i) {
-                    if (expandedDiskMap[j] is Cell.FreeSpace) {
+                    if (expandedDiskMap[j] == FREE_SPACE_ID) {
                         expandedDiskMap[j] = block
-                        expandedDiskMap[i] = Cell.FreeSpace(1)
+                        expandedDiskMap[i] = FREE_SPACE_ID
                         lastInsertion = j
                         break
                     }
@@ -47,12 +58,14 @@ class Day09 : AOCSolution {
             }
         }
 
-        val checksum = expandedDiskMap.mapIndexed { index, cell ->
-            when (cell) {
-                is Cell.FreeSpace -> 0
-                is Cell.File -> cell.fileId * index
+        var checksum = 0L
+        for (i in expandedDiskMap.indices) {
+            if (expandedDiskMap[i] != FREE_SPACE_ID) {
+                checksum += expandedDiskMap[i].toLong() * i
+            } else {
+                break
             }
-        }.sum()
+        }
 
         return checksum.toString()
     }
@@ -60,9 +73,10 @@ class Day09 : AOCSolution {
     override fun part2(inputFile: String): String {
         val inputDiskMap = readResource(inputFile).trim()
 
-        val denseDiskMap = buildList {
-            inputDiskMap.forEachIndexed { index, size ->
-                if (index % 2 == 0) {
+        val denseDiskMap = buildList(inputDiskMap.length * 2) {
+            for (index in inputDiskMap.indices) {
+                val size = inputDiskMap[index]
+                if (index and 1 == 0) {
                     add(Cell.File((index / 2).toLong(), size.digitToInt()))
                 } else {
                     add(Cell.FreeSpace(size.digitToInt()))
@@ -70,14 +84,16 @@ class Day09 : AOCSolution {
             }
         }.toMutableList()
 
+        // Keep track of the last insertion index for each file size
+        // This is used to skip past free space cells that are too small to hold the file
+        val lastInsertions = IntArray(10)
         // Move files from the back to free space in the front
-        val lastInsertions = mutableMapOf<Int, Int>().withDefault { 0 }
         for (i in denseDiskMap.indices.reversed()) {
             val file = denseDiskMap[i]
             if (file is Cell.File) {
 
                 // Find a free space cell that can hold the file
-                for (j in lastInsertions.getValue(file.fileSize) until i) {
+                for (j in lastInsertions[file.fileSize] until i) {
                     val cell = denseDiskMap[j]
                     if (cell is Cell.FreeSpace && cell.freeSpaceSize >= file.fileSize) {
                         denseDiskMap[j] = file
@@ -99,17 +115,15 @@ class Day09 : AOCSolution {
                 }
 
                 // Merge free space cells
-                for (k in denseDiskMap.lastIndex downTo lastInsertions.getValue(file.fileSize) + 1) {
-                    // Get the two cells to merge
-                    val previousCell = denseDiskMap[k - 1]
-                    val cellToMerge = denseDiskMap[k]
+                // There is no need to look at more than the previous cell, the current cell after being swapped with
+                // free space, and the next cell.
+                for (k in max(i - 1, 0) until min(i, denseDiskMap.lastIndex - 1)) {
+                    val currentCell = denseDiskMap[k]
+                    val nextCell = denseDiskMap[k + 1]
 
-                    if (cellToMerge is Cell.FreeSpace &&
-                        previousCell is Cell.FreeSpace
-                    ) {
-                        denseDiskMap[k - 1] =
-                            Cell.FreeSpace(previousCell.freeSpaceSize + cellToMerge.freeSpaceSize)
-                        denseDiskMap.removeAt(k)
+                    if (currentCell is Cell.FreeSpace && nextCell is Cell.FreeSpace) {
+                        denseDiskMap[k] = Cell.FreeSpace(currentCell.freeSpaceSize + nextCell.freeSpaceSize)
+                        denseDiskMap.removeAt(k + 1)
                     }
                 }
             }
@@ -125,14 +139,19 @@ class Day09 : AOCSolution {
                 }
 
                 is Cell.File -> {
-                    repeat(cell.fileSize) { fileBlock ->
-                        checksum += (currentBlock + fileBlock) * cell.fileId
-                    }
+                    // Sum from 1 to the end of the current file's blocks - sum from 1 to the start of the current file's blocks * file ID
+                    checksum += (sumFrom1ToN((currentBlock + cell.fileSize).toLong()) - sumFrom1ToN(currentBlock - 1L)) * cell.fileId
                     currentBlock += cell.fileSize
                 }
             }
         }
 
         return checksum.toString()
+    }
+
+    companion object {
+        const val FREE_SPACE_ID = -1
+
+        fun sumFrom1ToN(n: Long): Long = (n * (n + 1)) / 2
     }
 }
