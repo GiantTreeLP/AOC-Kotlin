@@ -58,15 +58,15 @@ class Day04 : AOCSolution {
     }
 
     private fun stringSize(x: Int): Int {
-        var x = x
+        var number = x
         var d = 1
-        if (x >= 0) {
+        if (number >= 0) {
             d = 0
-            x = -x
+            number = -number
         }
         var p = -10
         for (i in 1..9) {
-            if (x > p) return i + d
+            if (number > p) return i + d
             p *= 10
         }
         return 10 + d
