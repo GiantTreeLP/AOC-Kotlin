@@ -2,7 +2,7 @@ package year2015
 
 import com.google.auto.service.AutoService
 import common.AOCSolution
-import common.readResource
+import common.readResourceBinary
 import java.nio.ByteBuffer
 import java.security.MessageDigest
 import java.util.concurrent.Callable
@@ -23,7 +23,7 @@ class Day04 : AOCSolution {
     }
 
     private fun solve(inputFile: String, leadingZeroes: Int): String {
-        val input = readResource(inputFile)
+        val input = readResourceBinary(inputFile)
 
         val hashers = List(CONCURRENCY) {
             Hasher(input, it * BATCH_SIZE, CONCURRENCY, BATCH_SIZE, leadingZeroes)
@@ -46,7 +46,7 @@ class Day04 : AOCSolution {
         private const val CHARS_FOR_INT = 10
 
         private class Hasher(
-            input: String,
+            input: ByteArray,
             startNonce: Int,
             private val step: Int,
             private val batchSize: Int,
@@ -58,10 +58,10 @@ class Day04 : AOCSolution {
             private val digestLength = digest.digestLength
             private var buffer = ByteArray(digestLength)
 
-            private val bytes = ByteArray(input.length + CHARS_FOR_INT)
+            private val bytes = ByteArray(input.size + CHARS_FOR_INT)
 
             private val byteBuffer = ByteBuffer.wrap(bytes)
-                .put(input.toByteArray(Charsets.US_ASCII))
+                .put(input)
                 .mark()
 
             override fun call(): Int {

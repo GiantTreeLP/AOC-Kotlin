@@ -34,6 +34,9 @@ fun readResourceTwoParts(path: String): Pair<String, String> {
     return Pair(input[0], input[1])
 }
 
+fun readResourceBinary(path: String): ByteArray {
+    return getResource(path).openStream().use { it.readBytes() }
+}
 
 fun isResourceAvailable(path: String): Boolean {
     return getResource(path).openStream().use { true }
