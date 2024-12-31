@@ -26,14 +26,17 @@ class EightBitString private constructor(
 
     public fun flip() {
         buffer.flip()
+        mark = -1
     }
 
     public fun clear() {
         buffer.clear()
+        mark = -1
     }
 
     public fun compact() {
         buffer.compact()
+        mark = -1
     }
 
     public fun remaining(): Int {
@@ -46,6 +49,9 @@ class EightBitString private constructor(
 
     public fun position(newPosition: Int) {
         buffer.position(newPosition)
+        if (mark > newPosition) {
+            mark = -1
+        }
     }
 
     public fun limit(): Int {
