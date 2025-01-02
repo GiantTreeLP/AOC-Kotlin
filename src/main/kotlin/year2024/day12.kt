@@ -5,6 +5,7 @@ import common.AOCSolution
 import common.grid.Grid
 import common.grid.toGrid
 import common.Point
+import common.grid.pointIterator
 import common.readResourceLines
 
 @AutoService(AOCSolution::class)

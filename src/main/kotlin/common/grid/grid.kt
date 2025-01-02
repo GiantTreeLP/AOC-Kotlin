@@ -24,8 +24,6 @@ interface Grid<T : Any> : Iterable<T> {
     fun transposed(): Grid<T>
 
     override fun iterator(): Iterator<T> = GridIterator(this)
-    fun pointIterator(): Iterator<Pair<Point, T>>
-    fun firstSample() = this.values.first()
 }
 
 inline fun <reified T : Any> Iterable<Iterable<T>>.toGrid(): Grid<T> {
@@ -141,5 +139,13 @@ inline fun <reified T : Any> Grid<T>.subGrids(width: Int, height: Int): Array<Gr
         val y = it / lastColumn
         val x = it % lastColumn
         this.subGrid(x, y, width, height)
+    }
+}
+
+fun <T : Any> Grid<T>.pointIterator(): Iterator<Pair<Point, T>> {
+    return iterator {
+        for (point in this@pointIterator.indices) {
+            yield(point to this@pointIterator[point])
+        }
     }
 }

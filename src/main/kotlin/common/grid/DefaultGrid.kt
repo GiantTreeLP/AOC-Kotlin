@@ -120,14 +120,6 @@ class DefaultGrid<T : Any>(
         }
     }
 
-    override fun pointIterator(): Iterator<Pair<Point, T>> {
-        return iterator {
-            for (point in this@DefaultGrid.indices) {
-                yield(point to this@DefaultGrid[point])
-            }
-        }
-    }
-
     companion object {
         inline fun <reified T : Any> filled(width: Int, height: Int, value: T): DefaultGrid<T> {
             val gridArray = Array(width * height) { value }

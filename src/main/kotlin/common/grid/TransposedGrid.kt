@@ -48,14 +48,6 @@ class TransposedGrid<T : Any>(private val grid: Grid<T>) : Grid<T>, Iterable<T> 
         return this.grid
     }
 
-    override fun pointIterator(): Iterator<Pair<Point, T>> {
-        return iterator {
-            for (point in this@TransposedGrid.indices) {
-                yield(point to this@TransposedGrid[point])
-            }
-        }
-    }
-
     override operator fun set(x: Int, y: Int, value: T) {
         this.grid[y, x] = value
     }
