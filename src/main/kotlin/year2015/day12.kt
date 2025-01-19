@@ -5,8 +5,6 @@ import common.AOCSolution
 import common.readResourceLines
 import year2015.Day12.JsonValue.Companion.parseJson
 
-typealias Index = IntArray
-
 @AutoService(AOCSolution::class)
 class Day12 : AOCSolution {
     override val year = 2015
@@ -37,23 +35,26 @@ class Day12 : AOCSolution {
             Additionally, there is no whitespace in the input, so we can skip handling it as well.
              */
 
+            private var index = 0
+
             fun parseJson(jsonString: String): JsonValue {
-                return parseJsonInternal(jsonString, intArrayOf(0))
+                index = 0
+                return parseJsonInternal(jsonString)
             }
 
-            private fun parseJsonInternal(jsonString: String, index: Index): JsonValue {
+            private fun parseJsonInternal(jsonString: String): JsonValue {
                 // Force a switch (LOOKUPSWITCH) instead of a list of if-else statements
-                when (jsonString[index[0]].code) {
+                when (jsonString[index].code) {
                     '{'.code -> {
-                        return parseObject(jsonString, index)
+                        return parseObject(jsonString)
                     }
 
                     '['.code -> {
-                        return parseArray(jsonString, index)
+                        return parseArray(jsonString)
                     }
 
                     '"'.code -> {
-                        return parseString(jsonString, index)
+                        return parseString(jsonString)
                     }
 
                     '0'.code,
@@ -67,29 +68,29 @@ class Day12 : AOCSolution {
                     '8'.code,
                     '9'.code,
                     '-'.code -> {
-                        return parseNumber(jsonString, index)
+                        return parseNumber(jsonString)
                     }
 
                     else -> error("Unexpected character at index $index")
                 }
             }
 
-            private fun parseObject(jsonString: String, index: Index): Object {
+            private fun parseObject(jsonString: String): Object {
                 val properties = mutableListOf<JsonValue>()
 
-                require(jsonString[index[0]] == '{') { "Expected '{' at index $index" }
-                ++index[0]
+                require(jsonString[index] == '{') { "Expected '{' at index $index" }
+                ++index
 
                 var isRed = false
 
-                while (jsonString[index[0]] != '}') {
-                    parseString(jsonString, index)  // The key is not needed for this problem, so we can ignore it
+                while (jsonString[index] != '}') {
+                    parseString(jsonString)  // The key is not needed for this problem, so we can ignore it
 
-                    if (jsonString[index[0]] != ':') {
+                    if (jsonString[index] != ':') {
                         error("Expected ':' at index $index")
                     }
-                    ++index[0]
-                    val value = parseJsonInternal(jsonString, index)
+                    ++index
+                    val value = parseJsonInternal(jsonString)
                     if (value !is StringValue) {
                         // Only add non-string values
                         properties.add(value)
@@ -97,59 +98,58 @@ class Day12 : AOCSolution {
                         isRed = true
                     }
 
-                    if (jsonString[index[0]] == ',') {
-                        ++index[0]
+                    if (jsonString[index] == ',') {
+                        ++index
                     }
                 }
 
-                ++index[0]
+                ++index
 
                 return Object(properties, isRed)
             }
 
-            private fun parseString(jsonString: String, index: Index): StringValue {
-                require(jsonString[index[0]] == '"') { "Expected '\"' at index $index" }
-                ++index[0]
+            private fun parseString(jsonString: String): StringValue {
+                require(jsonString[index] == '"') { "Expected '\"' at index $index" }
+                ++index
 
-                val start = index[0]
-                while (jsonString[index[0]] != '"') {
-                    ++index[0]
+                val start = index
+                while (jsonString[index] != '"') {
+                    ++index
                 }
-                val value = jsonString.substring(start, index[0])
-                ++index[0]
+                val value = jsonString.substring(start, index)
+                ++index
                 return StringValue(value)
             }
 
-            private fun parseNumber(jsonString: String, startIndex: Index): Number {
-                var index = startIndex
-                val start = index[0]
+            private fun parseNumber(jsonString: String): Number {
+                var start = index
 
-                if (jsonString[index[0]] == '-') {
-                    ++index[0]
+                if (jsonString[index] == '-') {
+                    ++index
                 }
 
-                while (jsonString[index[0]] in '0'..'9') {
-                    ++index[0]
+                while (jsonString[index] in '0'..'9') {
+                    ++index
                 }
-                val value = Integer.parseInt(jsonString, start, index[0], 10)
+                val value = Integer.parseInt(jsonString, start, index, 10)
                 return Number(value)
             }
 
-            private fun parseArray(jsonString: String, index: Index): Array {
+            private fun parseArray(jsonString: String): Array {
                 val elements = mutableListOf<JsonValue>()
 
-                require(jsonString[index[0]] == '[') { "Expected '[' at index $index" }
-                ++index[0]
+                require(jsonString[index] == '[') { "Expected '[' at index $index" }
+                ++index
 
-                while (jsonString[index[0]] != ']') {
-                    val element = parseJsonInternal(jsonString, index)
+                while (jsonString[index] != ']') {
+                    val element = parseJsonInternal(jsonString)
                     elements.add(element)
-                    if (jsonString[index[0]] == ',') {
-                        ++index[0]
+                    if (jsonString[index] == ',') {
+                        ++index
                     }
                 }
 
-                ++index[0]
+                ++index
 
                 return Array(elements)
             }
