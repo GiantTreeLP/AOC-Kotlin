@@ -29,8 +29,8 @@ class Day13 : AOCSolution {
                     1
                 }
             }
-            val person1Index = personIds.putIfAbsent(person1, personIds.size) ?: personIds.getValue(person1)
-            val person2Index = personIds.putIfAbsent(person2, personIds.size) ?: personIds.getValue(person2)
+            val person1Index = personIds.getOrPut(person1) { personIds.size }
+            val person2Index = personIds.getOrPut(person2) { personIds.size }
             persons.put(person1Index to person2Index, happiness.toInt() * gain)
         }
 
