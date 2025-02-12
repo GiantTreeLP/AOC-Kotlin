@@ -22,11 +22,11 @@ class Day17 : AOCSolution {
         index: Int = 0,
         containers: IntArray,
         containersAmount: Int = 0,
-        solutionsAmounts: MutableMap<Int, Int> = mutableMapOf()
+        solutionsAmounts: IntArray = IntArray(containers.size)
     ): Int {
         return if (remaining == 0) {
             // Add the solution to the map
-            solutionsAmounts.merge(containersAmount, 1) { a, b -> a + b }
+            solutionsAmounts[containersAmount]++
             1
         } else if (remaining < 0 || index >= containers.size) {
             0
@@ -74,11 +74,11 @@ class Day17 : AOCSolution {
             EGGNOG_ACTUAL
         }
 
-        val solutionsAmounts = mutableMapOf<Int, Int>()
+        val solutionsAmounts = IntArray(containers.size)
         countCombinations(eggnog, containers = containers, solutionsAmounts = solutionsAmounts)
 
-        val minContainers = solutionsAmounts.minBy { it.key }
-        return solutionsAmounts[minContainers.key].toString()
+        val minContainers = solutionsAmounts.first { it > 0 }
+        return minContainers.toString()
     }
 
     companion object {
