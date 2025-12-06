@@ -1,6 +1,7 @@
 package common
 
 import java.nio.ByteBuffer
+import java.nio.CharBuffer
 import java.nio.charset.Charset
 import kotlin.math.log10
 
@@ -8,7 +9,7 @@ import kotlin.math.log10
 @Suppress("RedundantVisibilityModifier")
 class EightBitString private constructor(
     private var buffer: ByteBuffer
-) {
+) : Appendable, CharSequence {
     constructor(initialCapacity: Int = INITIAL_BUFFER_SIZE) : this(ByteBuffer.allocateDirect(initialCapacity))
 
     constructor(wrapping: ByteArray) : this(ByteBuffer.wrap(wrapping))
@@ -115,9 +116,36 @@ class EightBitString private constructor(
         buffer.put(value)
     }
 
-    public fun append(value: Char) {
+    override fun append(csq: CharSequence?): EightBitString {
+        when (csq) {
+            null -> append("null")
+            is String -> append(csq)
+            else -> {
+                growIfNeeded(csq.length)
+                val buf = CharBuffer.wrap(csq)
+                append(Charsets.US_ASCII.encode(buf))
+            }
+        }
+        return this
+    }
+
+    override fun append(csq: CharSequence?, start: Int, end: Int): EightBitString {
+        when (csq) {
+            null -> append("null", start, end)
+            is String -> append(csq.substring(start, end))
+            else -> {
+                growIfNeeded(end - start)
+                val buf = CharBuffer.wrap(csq, start, end)
+                append(Charsets.US_ASCII.encode(buf))
+            }
+        }
+        return this
+    }
+
+    public override fun append(value: Char): EightBitString {
         growIfNeeded(2)
         buffer.putChar(value)
+        return this
     }
 
     public fun append(value: String) {
@@ -250,6 +278,23 @@ class EightBitString private constructor(
 
     private fun grow() {
         growExact((buffer.capacity() * GROWTH_FACTOR).toInt())
+    }
+
+    override val length: Int
+        get() = buffer.limit()
+
+    override fun get(index: Int): Char {
+        return buffer.get(index).toInt().toChar()
+    }
+
+    override fun subSequence(startIndex: Int, endIndex: Int): CharSequence {
+        val oldPosition = buffer.position()
+        buffer.position(startIndex)
+        val length = endIndex - startIndex
+        val bytes = ByteArray(length)
+        buffer.get(bytes, 0, length)
+        buffer.position(oldPosition)
+        return String(bytes, Charsets.US_ASCII)
     }
 
     companion object {
