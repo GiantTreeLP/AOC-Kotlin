@@ -18,8 +18,8 @@ repositories {
 }
 
 dependencies {
-    ksp("dev.zacsweers.autoservice", "auto-service-ksp", autoServiceKspVersion)
-    implementation("com.google.auto.service", "auto-service-annotations", autoServiceAnnotationsVersion)
+    ksp("dev.zacsweers.autoservice:auto-service-ksp:$autoServiceKspVersion")
+    implementation("com.google.auto.service:auto-service-annotations:$autoServiceAnnotationsVersion")
     testImplementation(kotlin("test"))
 }
 
