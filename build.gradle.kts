@@ -4,9 +4,9 @@ val autoServiceKspVersion = "1.2.0"
 val autoServiceAnnotationsVersion = "1.1.1"
 
 plugins {
-    val kspVersion = "2.1.0-1.0.29"
+    val kspVersion = "2.3.3"
 
-    kotlin("jvm") version "2.1.0"
+    kotlin("jvm") version "2.2.21"
     id("com.google.devtools.ksp") version kspVersion
 }
 
@@ -23,10 +23,14 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
+ksp {
+    arg("autoserviceKsp.verify", "true")
+}
+
 tasks.test {
     useJUnitPlatform()
 }
 
 tasks.compileKotlin {
-    compilerOptions.jvmTarget.set(JvmTarget.JVM_23)
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_24)
 }
