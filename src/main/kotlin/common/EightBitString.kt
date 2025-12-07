@@ -2,13 +2,11 @@ package common
 
 import java.nio.ByteBuffer
 import java.nio.CharBuffer
-import java.nio.charset.Charset
-import kotlin.math.log10
 
 
 @Suppress("RedundantVisibilityModifier")
 class EightBitString private constructor(
-    private var buffer: ByteBuffer
+    private var buffer: ByteBuffer,
 ) : Appendable, CharSequence {
     constructor(initialCapacity: Int = INITIAL_BUFFER_SIZE) : this(ByteBuffer.allocateDirect(initialCapacity))
 
@@ -68,18 +66,14 @@ class EightBitString private constructor(
     }
 
     public fun array(): ByteArray {
-        if (buffer.hasArray()) {
-            return buffer.array()
+        return if (buffer.hasArray()) {
+            buffer.array()
         } else {
-            val position = buffer.position()
-            buffer.flip()
-            val array = ByteArray(buffer.remaining())
-            buffer.get(array)
-
-            buffer.position(mark)
-            buffer.mark()
-            buffer.position(position)
-            return array
+            flipScope { ebs ->
+                val array = ByteArray(buffer.remaining())
+                buffer.get(array)
+                array
+            }
         }
     }
 
@@ -87,13 +81,9 @@ class EightBitString private constructor(
         if (buffer.hasArray()) {
             System.arraycopy(buffer.array(), buffer.arrayOffset() + buffer.position(), destination, offset, limit())
         } else {
-            val position = buffer.position()
-            buffer.flip()
-            buffer.get(destination, offset, limit())
-
-            buffer.position(mark)
-            buffer.mark()
-            buffer.position(position)
+            flipScope { ebs ->
+                ebs.buffer.get(destination, offset, limit())
+            }
         }
     }
 
@@ -119,6 +109,7 @@ class EightBitString private constructor(
     override fun append(csq: CharSequence?): EightBitString {
         when (csq) {
             null -> append("null")
+            is EightBitString -> append(csq)
             is String -> append(csq)
             else -> {
                 growIfNeeded(csq.length)
@@ -165,11 +156,7 @@ class EightBitString private constructor(
         require(value >= 0) { "Negative values are not supported" }
         var remaining = value
         val offset = position()
-        val length = if (value != 0) {
-            log10(remaining.toDouble()).toInt() + 1
-        } else {
-            1
-        }
+        val length = stringSize(value)
         growIfNeeded(length)
 
         var remainingDigits = length
@@ -196,12 +183,8 @@ class EightBitString private constructor(
     public fun appendLongAsString(value: Long) {
         require(value >= 0) { "Negative values are not supported" }
         var remaining = value
-        val offset = position() - 1
-        val length = if (value != 0L) {
-            log10(remaining.toDouble()).toInt() + 1
-        } else {
-            1
-        }
+        val offset = position()
+        val length = stringSize(value)
         growIfNeeded(length)
 
         var remainingDigits = length
@@ -247,16 +230,6 @@ class EightBitString private constructor(
         return buffer.long
     }
 
-    public fun getBytes(): ByteArray {
-        val bytes = ByteArray(buffer.remaining())
-        buffer.get(bytes)
-        return bytes
-    }
-
-    public fun getString(charset: Charset = Charsets.US_ASCII): String {
-        return String(getBytes(), charset)
-    }
-
     // Resize methods
 
     private fun growIfNeeded(minimumSize: Int) {
@@ -270,8 +243,10 @@ class EightBitString private constructor(
         val position = buffer.position()
         buffer.flip()
         newBuffer.put(buffer)
-        newBuffer.position(mark)
-        newBuffer.mark()
+        if (mark >= 0) {
+            newBuffer.position(mark)
+            newBuffer.mark()
+        }
         newBuffer.position(position)
         buffer = newBuffer
     }
@@ -281,20 +256,72 @@ class EightBitString private constructor(
     }
 
     override val length: Int
-        get() = buffer.limit()
+        get() = buffer.position()
 
     override fun get(index: Int): Char {
         return buffer.get(index).toInt().toChar()
     }
 
-    override fun subSequence(startIndex: Int, endIndex: Int): CharSequence {
-        val oldPosition = buffer.position()
-        buffer.position(startIndex)
-        val length = endIndex - startIndex
-        val bytes = ByteArray(length)
-        buffer.get(bytes, 0, length)
-        buffer.position(oldPosition)
-        return String(bytes, Charsets.US_ASCII)
+    override fun subSequence(startIndex: Int, endIndex: Int): EightBitString {
+        return EightBitString(buffer.slice(startIndex, endIndex))
+    }
+
+    /**
+     * Executes [action] inside a "scope" that has the current [buffer] flipped.
+     * The [buffer]'s flipping is undone after the action.
+     *
+     * @param O the result type of the action
+     * @param action the action to execute
+     * @return the result of [action]
+     */
+    private inline fun <O : Any?> EightBitString.flipScope(action: (EightBitString) -> O): O {
+        // Save positions, marks and limits
+        val position = this.position()
+        val limit = this.limit()
+        val mark = this.mark
+
+        this.flip()
+        val result = action(this)
+
+        this.limit(limit)
+
+        if (mark >= 0) {
+            this.position(mark)
+            this.mark()
+        }
+        this.position(position)
+
+        return result
+    }
+
+    fun contentEquals(other: EightBitString): Boolean {
+        if (this === other) return true
+
+        return this.flipScope { first ->
+            other.flipScope { second ->
+                first.buffer == second.buffer
+            }
+        }
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is EightBitString) return false
+
+        if (mark != other.mark) return false
+        if (buffer != other.buffer) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = mark
+        result = 31 * result + buffer.hashCode()
+        return result
+    }
+
+    override fun toString(): String {
+        return String(array(), Charsets.US_ASCII)
     }
 
     companion object {
@@ -319,6 +346,58 @@ class EightBitString private constructor(
                 this.digitQuads[i] =
                     ((('0'.code + thousands) shl 24) or (('0'.code + hundreds) shl 16) or (('0'.code + tens) shl 8) or ('0'.code + ones))
             }
+        }
+
+        /**
+         * Returns the string representation size for a given int value.
+         *
+         * @param x int value
+         * @return string size
+         *
+         * @implNote There are other ways to compute this: e.g. binary search,
+         * but values are biased heavily towards zero, and therefore linear search
+         * wins. The iteration results are also routinely inlined in the generated
+         * code after loop unrolling.
+         */
+        public fun stringSize(x: Int): Int {
+            var x = x
+            var d = 1
+            if (x >= 0) {
+                d = 0
+                x = -x
+            }
+            var p = -10
+            for (i in 1..9) {
+                if (x > p) return i + d
+                p *= 10
+            }
+            return 10 + d
+        }
+
+        /**
+         * Returns the string representation size for a given long value.
+         *
+         * @param x long value
+         * @return string size
+         *
+         * @implNote There are other ways to compute this: e.g. binary search,
+         * but values are biased heavily towards zero, and therefore linear search
+         * wins. The iteration results are also routinely inlined in the generated
+         * code after loop unrolling.
+         */
+        public fun stringSize(x: Long): Int {
+            var x = x
+            var d = 1
+            if (x >= 0) {
+                d = 0
+                x = -x
+            }
+            var p: Long = -10
+            for (i in 1..18) {
+                if (x > p) return i + d
+                p *= 10
+            }
+            return 19 + d
         }
     }
 }
