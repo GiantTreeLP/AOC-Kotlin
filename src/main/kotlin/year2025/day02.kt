@@ -2,6 +2,7 @@ package year2025
 
 import com.google.auto.service.AutoService
 import common.AOCSolution
+import common.EightBitString
 import common.readResource
 
 @AutoService(AOCSolution::class)
@@ -11,16 +12,17 @@ class Day02 : AOCSolution {
 
     override fun part1(inputFile: String): String {
         var answer = 0L
-        val digits = StringBuilder(10)
+        val digits = EightBitString()
 
         readResource(inputFile).trim().split(RANGE_SEPARATOR).forEach { range ->
             val (lowerBound, upperBound) = range.split(BOUNDS_SEPARATOR, limit = 2).map(String::toLong)
             for (number in lowerBound..upperBound) {
-
-                digits.clear().append(number)
+                val digitsLength = EightBitString.stringSize(number)
                 // Restrict to even numbers
-                if (digits.length % 2 == 0) {
-                    val middle = digits.length / 2
+                if (digitsLength % 2 == 0) {
+                    val middle = digitsLength / 2
+                    digits.clear()
+                    digits.appendLongAsString(number)
                     // Check if first half matches second half
                     if (digits.regionMatches(0, digits, middle, middle, false)) {
                         answer += number
@@ -33,22 +35,28 @@ class Day02 : AOCSolution {
 
     override fun part2(inputFile: String): String {
         var answer = 0L
-        val digits = StringBuilder(10)
-        val buffer = StringBuilder(10)
+        val digits = EightBitString()
+        val buffer = EightBitString()
 
         readResource(inputFile).trim().split(RANGE_SEPARATOR).forEach { range ->
             val (lowerBound, upperBound) = range.split(BOUNDS_SEPARATOR, limit = 2).map(String::toLong)
 
             for (number in lowerBound..upperBound) {
-                digits.clear().append(number)
+                digits.clear()
+                digits.appendLongAsString(number)
                 // Check for all factors if the number is made up of repeated sequences
                 for (factor in FACTORS[digits.length]) {
                     val repetitions = digits.length / factor
                     // Build the repeated sequence in the buffer
-                    buffer.clear().repeat(digits.take(factor), repetitions)
+                    val subsequence = digits.subSequence(0, factor)
+                    buffer.clear()
+                    repeat(repetitions) {
+                        buffer.append(subsequence)
+                        subsequence.flip()
+                    }
 
                     // Check if the built buffer matches the original digits
-                    if (buffer.compareTo(digits) == 0) {
+                    if (buffer.contentEquals(digits)) {
                         answer += number
                         break
                     }
