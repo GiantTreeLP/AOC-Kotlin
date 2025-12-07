@@ -56,7 +56,7 @@ class Day01 : AOCSolution {
             crossings += (safePosition / SAFE_POSITIONS).absoluteValue
             password += crossings
             // The dial is circular
-            safePosition = safePosition modulo SAFE_POSITIONS
+            safePosition = safePosition.mod(SAFE_POSITIONS)
         }
 
         return password.toString()
@@ -68,10 +68,5 @@ class Day01 : AOCSolution {
 
         const val DIRECTION_LEFT = 'L'
         const val DIRECTION_RIGHT = 'R'
-
-        private infix fun Int.modulo(other: Int): Int {
-            val result = this % other
-            return if (result < 0) result + other else result
-        }
     }
 }
