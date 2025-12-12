@@ -66,10 +66,14 @@ class EightBitString private constructor(
     }
 
     public fun array(): ByteArray {
-        return if (buffer.hasArray()) {
+        return if (buffer.hasArray() &&
+            buffer.arrayOffset() == 0 &&
+            buffer.limit() == buffer.capacity() &&
+            buffer.array().size == buffer.capacity()
+        ) {
             buffer.array()
         } else {
-            flipScope { ebs ->
+            resetScope { ebs ->
                 val array = ByteArray(buffer.remaining())
                 buffer.get(array)
                 array
@@ -230,6 +234,10 @@ class EightBitString private constructor(
         return buffer.long
     }
 
+    public fun getByte(index: Int): Byte {
+        return buffer.get(index)
+    }
+
     // Resize methods
 
     private fun growIfNeeded(minimumSize: Int) {
@@ -256,14 +264,14 @@ class EightBitString private constructor(
     }
 
     override val length: Int
-        get() = buffer.position()
+        get() = buffer.limit()
 
     override fun get(index: Int): Char {
         return buffer.get(index).toInt().toChar()
     }
 
     override fun subSequence(startIndex: Int, endIndex: Int): EightBitString {
-        return EightBitString(buffer.slice(startIndex, endIndex))
+        return EightBitString(buffer.slice(startIndex, endIndex - startIndex))
     }
 
     /**
@@ -293,6 +301,35 @@ class EightBitString private constructor(
 
         return result
     }
+
+    /**
+     * Executes [action] inside a "scope" that has the current [buffer]'s position set to 0.
+     * Modifications done to the [buffer] are undone after the action.
+     *
+     * @param O the result type of the action
+     * @param action the action to execute
+     * @return the result of [action]
+     */
+    private inline fun <O : Any?> EightBitString.resetScope(action: (EightBitString) -> O): O {
+        // Save positions, marks and limits
+        val position = this.position()
+        val limit = this.limit()
+        val mark = this.mark
+
+        this.position(0)
+        val result = action(this)
+
+        this.limit(limit)
+
+        if (mark >= 0) {
+            this.position(mark)
+            this.mark()
+        }
+        this.position(position)
+
+        return result
+    }
+
 
     fun contentEquals(other: EightBitString): Boolean {
         if (this === other) return true
