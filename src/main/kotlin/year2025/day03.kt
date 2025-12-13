@@ -17,8 +17,8 @@ class Day03 : AOCSolution {
     }
 
     override fun part2(inputFile: String): String {
-        return readResourceBinary(inputFile).lineSequence().sumOf { line ->
-            findHighestJoltage(line, 12)
+        return readResourceBinary(inputFile).lineSequence().sumOf { batteryBank ->
+            findHighestJoltage(batteryBank, 12)
         }.toString()
     }
 
@@ -45,26 +45,21 @@ class Day03 : AOCSolution {
     private companion object {
         private fun ByteArray.lineSequence(): Sequence<EightBitString> {
             val buffer = EightBitString(this)
-            var currentIndex = 0
+            var currentOffset = 0
             return generateSequence {
-                var b: EightBitString? = null
-                for (i in currentIndex until buffer.limit()) {
-                    if (buffer[i] == '\n') {
-                        b = buffer.subSequence(currentIndex, i)
-                        break
+                for (characterIndex in currentOffset until buffer.limit()) {
+                    if (buffer[characterIndex] == '\n') {
+                        val slice = buffer.subSequence(currentOffset, characterIndex)
+
+                        // Despite believing that `currentIndex` is not read,
+                        // it is indeed read the next time this generator is called.
+                        @Suppress("AssignedValueIsNeverRead")
+                        currentOffset = characterIndex + 1
+                        return@generateSequence slice
                     }
                 }
-                // If we could not find the separator, return the remaining buffer
-                if (b == null) {
-                    b = buffer.subSequence(currentIndex, buffer.limit())
-                }
-
-                if (b.isEmpty()) {
-                    return@generateSequence null
-                }
-                @Suppress("AssignedValueIsNeverRead")
-                currentIndex += b.length + 1
-                return@generateSequence b
+                // A '\n' is always found, because the files end with a new line.
+                return@generateSequence null
             }
         }
 
