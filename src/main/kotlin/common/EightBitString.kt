@@ -82,11 +82,12 @@ class EightBitString private constructor(
     }
 
     public fun array(destination: ByteArray, offset: Int = 0) {
+        val length = minOf(limit(), destination.size - offset)
         if (buffer.hasArray()) {
-            System.arraycopy(buffer.array(), buffer.arrayOffset() + buffer.position(), destination, offset, limit())
+            System.arraycopy(buffer.array(), buffer.arrayOffset() + buffer.position(), destination, offset, length)
         } else {
             flipScope { ebs ->
-                ebs.buffer.get(destination, offset, limit())
+                ebs.buffer.get(destination, offset, length)
             }
         }
     }
