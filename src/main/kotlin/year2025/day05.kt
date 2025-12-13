@@ -61,8 +61,9 @@ class Day05 : AOCSolution {
                 val upperRange = ranges[i]
 
                 // The two ranges do overlap, because the tail of the first range
-                // is in the second range.
-                if (upperRange.first <= lowerRange.last || lowerRange.last == upperRange.first - 1) {
+                // is in the second range or the tail of the lower range
+                // is directly adjacent to the head of the upper range.
+                if (lowerRange.last + 1 >= upperRange.first) {
                     ranges[i - 1] = LongRange(
                         lowerRange.first,
                         maxOf(lowerRange.last, upperRange.last)
