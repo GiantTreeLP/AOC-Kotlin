@@ -45,8 +45,8 @@ class Day02 : AOCSolution {
                 digits.clear()
                 digits.appendLongAsString(number)
                 // Check for all factors if the number is made up of repeated sequences
-                for (factor in FACTORS[digits.length]) {
-                    val repetitions = digits.length / factor
+                for (factor in FACTORS[digits.position()]) {
+                    val repetitions = digits.position() / factor
                     // Build the repeated sequence in the buffer
                     val subsequence = digits.subSequence(0, factor)
                     buffer.clear()
