@@ -5,7 +5,6 @@ import common.AOCSolution
 import common.grid.CharGrid
 import common.grid.CharGrid.Companion.toCharGrid
 import common.readResourceLines
-import java.util.function.Predicate
 
 @AutoService(AOCSolution::class)
 class Day04 : AOCSolution {
@@ -22,7 +21,7 @@ class Day04 : AOCSolution {
             for (x in 0 until grid.width) {
                 // Count the neighbours of each paper roll.
                 if (grid[x, y] == PAPER_ROLL &&
-                    grid.countNeighbours(x, y, 1) { it == PAPER_ROLL } < 4
+                    grid.countPaperRolls(x, y) < 4
                 ) {
                     accessiblePaperRolls++
                 }
@@ -42,7 +41,7 @@ class Day04 : AOCSolution {
             for (y in 0 until grid.height) {
                 for (x in 0 until grid.width) {
                     if (grid[x, y] == PAPER_ROLL &&
-                        grid.countNeighbours(x, y, 1) { it == PAPER_ROLL } < 4
+                        grid.countPaperRolls(x, y) < 4
                     ) {
                         // Remove the paper roll for the next iteration
                         grid[x, y] = REMOVED_PAPER_ROLL
@@ -62,35 +61,30 @@ class Day04 : AOCSolution {
     }
 
     private companion object {
-        const val PAPER_ROLL = '@'
-        const val REMOVED_PAPER_ROLL = 'x'
+        private const val PAPER_ROLL = '@'
+        private const val REMOVED_PAPER_ROLL = 'x'
+        private const val RADIUS = 1
 
         /**
-         * Count the neighbours of the given cell in the given [radius] of cells that satisfy the given predicate.
+         * Count the amount of paper rolls around the given position.
          *
          * @param startX the horizontal position of the center of the count in the grid
          * @param startY the vertical position of the center of the count in the grid
-         * @param radius the radius counted in Manhattan distance to the center
-         * @param predicate the test that needs to pass for a neighbour to count.
          */
-        private fun CharGrid.countNeighbours(
+        private fun CharGrid.countPaperRolls(
             startX: Int,
             startY: Int,
-            radius: Int,
-            predicate: Predicate<Char>,
         ): Int {
             var count = 0
-            for (y in maxOf(startY - radius, 0)..minOf(startY + radius, height - 1)) {
-                for (x in maxOf(startX - radius, 0)..minOf(startX + radius, width - 1)) {
-                    if (y == startY && x == startX) {
-                        continue
-                    }
-                    if (predicate.test(this[x, y])) {
+            for (y in maxOf(startY - RADIUS, 0)..minOf(startY + RADIUS, height - 1)) {
+                for (x in maxOf(startX - RADIUS, 0)..minOf(startX + RADIUS, width - 1)) {
+                    if (this[x, y] == PAPER_ROLL) {
                         count++
                     }
                 }
             }
-            return count
+            // Assume the center to also be a paper roll and thus subtract one
+            return count - 1
         }
     }
 }
