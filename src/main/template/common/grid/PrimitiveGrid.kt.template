@@ -59,7 +59,7 @@ class #TYPE#Grid(
     }
 
     override fun transposed(): Grid<#TYPE#> {
-        return TransposedGrid(this)
+        return Transposed#TYPE#Grid(this)
     }
 
     override operator fun set(x: Int, y: Int, value: #TYPE#) {
