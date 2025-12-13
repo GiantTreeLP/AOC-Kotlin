@@ -11,75 +11,45 @@ class Day03 : AOCSolution {
     override val day = 3
 
     override fun part1(inputFile: String): String {
-        return readResourceBinary(inputFile).lineSequence().sumOf { line ->
-            val indices = IntArray(2) { -1 }
-            findSolution(indices, line)
-            indices.sort()
-
-            indices.fold(0L) { acc, i -> acc * 10L + (line[i].toDigit()) }
+        return readResourceBinary(inputFile).lineSequence().sumOf { batteryBank ->
+            findHighestJoltage(batteryBank, 2)
         }.toString()
     }
 
     override fun part2(inputFile: String): String {
         return readResourceBinary(inputFile).lineSequence().sumOf { line ->
-            val indices = IntArray(12) { -1 }
-            findSolution(indices, line)
-            indices.sort()
-
-            indices.fold(0L) { acc, i -> acc * 10L + (line[i].toDigit()) }
+            findHighestJoltage(line, 12)
         }.toString()
     }
 
-    private fun findSolution(
-        indices: IntArray,
-        buffer: EightBitString,
-        currentDepth: Int = 0,
-        startIndex: Int = 0,
-        endIndex: Int = buffer.length,
-    ): Int {
-        if (currentDepth >= indices.size) {
-            // We have reached the depth limit
-            return currentDepth
-        }
-        if (startIndex == endIndex) {
-            // We have encountered the end of the searchable range
-            return currentDepth
+    private fun findHighestJoltage(
+        bank: EightBitString,
+        batteries: Int,
+    ): Long {
+        val digitsArray = ByteArray(batteries) { -1 }
+
+        var lastDigitIndex = 0
+        repeat(batteries) { currentDigit ->
+            val remainingDigits = batteries - currentDigit
+            val lastIndex = bank.length - remainingDigits + 1
+
+            val maxIndex = bank.indexOfMax(lastDigitIndex, lastIndex)
+            lastDigitIndex = maxIndex + 1
+            digitsArray[batteries - remainingDigits] = bank[maxIndex].toDigit()
         }
 
-        val maxIndex = buffer.subSequence(startIndex, endIndex).indexOfMax() + startIndex
-        indices[currentDepth] = maxIndex
-
-        // Try to find a solution to the right of the maximum digit
-        var depth = findSolution(
-            indices,
-            buffer,
-            currentDepth + 1,
-            maxIndex + 1,
-            endIndex,
-        )
-        // Check whether all digits are found
-        if (depth <= indices.lastIndex) {
-            // Try to find the remaining digits to the left of the current remaining digit
-            depth = findSolution(
-                indices,
-                buffer,
-                depth,
-                startIndex,
-                maxIndex
-            )
-        }
-        return depth
+        return digitsArray.fold(0L) { acc, i -> acc * 10L + i }
     }
 
-    companion object {
-        fun ByteArray.lineSequence(): Sequence<EightBitString> {
+
+    private companion object {
+        private fun ByteArray.lineSequence(): Sequence<EightBitString> {
             val buffer = EightBitString(this)
             var currentIndex = 0
-            val newLine = '\n'
             return generateSequence {
                 var b: EightBitString? = null
                 for (i in currentIndex until buffer.limit()) {
-                    if (buffer[i] == newLine) {
+                    if (buffer[i] == '\n') {
                         b = buffer.subSequence(currentIndex, i)
                         break
                     }
@@ -92,18 +62,22 @@ class Day03 : AOCSolution {
                 if (b.isEmpty()) {
                     return@generateSequence null
                 }
+                @Suppress("AssignedValueIsNeverRead")
                 currentIndex += b.length + 1
                 return@generateSequence b
             }
         }
 
-        fun EightBitString.indexOfMax(): Int {
-            if (remaining() == 0) {
+        private fun EightBitString.indexOfMax(
+            startIndex: Int,
+            endIndex: Int,
+        ): Int {
+            if (startIndex >= endIndex) {
                 return -1
             }
-            var maxIndex = 0
-            var max = getByte(maxIndex)
-            for (i in position() until this.limit()) {
+            var maxIndex = startIndex
+            var max = 0.toByte()
+            for (i in startIndex until endIndex) {
                 val c = getByte(i)
                 if (c > max) {
                     maxIndex = i
@@ -113,6 +87,6 @@ class Day03 : AOCSolution {
             return maxIndex
         }
 
-        fun Char.toDigit(): Long = (this - '0'.code).code.toLong()
+        private fun Char.toDigit(): Byte = (this - '0').toByte()
     }
 }
