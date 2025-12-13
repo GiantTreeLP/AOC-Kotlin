@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.sourceSets
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 val autoServiceKspVersion = "1.2.0"
@@ -31,6 +32,35 @@ tasks.test {
     useJUnitPlatform()
 }
 
+sourceSets {
+    main {
+        kotlin {
+            srcDir(layout.buildDirectory.dir("generated/grid"))
+        }
+    }
+}
+
 tasks.compileKotlin {
+    dependsOn("generateGrids")
     compilerOptions.jvmTarget.set(JvmTarget.JVM_24)
+}
+
+tasks.register<DefaultTask>("generateGrids") {
+    val destinationDir = file(layout.buildDirectory.dir("generated/grid"))
+    destinationDir.deleteRecursively()
+    destinationDir.mkdirs()
+    val tree = fileTree(layout.projectDirectory.dir("/src/main/template/common/grid")) {
+        include("**/*.kt.template")
+    }
+    listOf("Boolean", "Byte", "Short", "Char", "Int", "Long", "Float", "Double").map { primitiveType ->
+        tree.visit {
+            val outputFile = destinationDir.resolve(
+                file.name
+                    .replace("Primitive", primitiveType)
+                    .replace(".template$".toRegex(), "")
+            )
+            val outputContent = this.file.readText().replace("#TYPE#", primitiveType)
+            outputFile.writeText(outputContent)
+        }
+    }
 }

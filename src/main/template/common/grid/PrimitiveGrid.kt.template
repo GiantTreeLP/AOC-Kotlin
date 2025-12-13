@@ -1,0 +1,139 @@
+package common.grid
+
+import common.Point
+import common.Rectangle
+
+class #TYPE#Grid(
+    override val width: Int,
+    override val height: Int,
+    grid: #TYPE#Array
+) : Grid<#TYPE#> {
+    private val internalGrid: #TYPE#Array = grid
+
+    override val bounds = Rectangle(Point(0, 0), Point(this.width, this.height))
+
+    override val values get() = this.internalGrid.toTypedArray()
+
+    override val indices = PointProgression(width.toLong(), height.toLong(), 1)
+
+    constructor(width: Int, height: Int, initializer: (x: Int, y: Int) -> #TYPE#) : this(
+        width,
+        height,
+        #TYPE#Array(width * height) { index ->
+            initializer(index % width, index / width)
+        }
+    )
+
+    constructor(width: Int, height: Int, initializer: (Point) -> #TYPE#) : this(width, height, { x, y ->
+        initializer(Point(x, y))
+    })
+
+    override operator fun get(x: Int, y: Int): #TYPE# {
+        require(x in 0 until this.width) { "X index $x out of bounds for range 0..<$width" }
+        require(y in 0 until this.height) { "Y index $y out of bounds for range 0..<$height" }
+        return this.internalGrid[y * this.width + x]
+    }
+
+    override operator fun get(point: Point): #TYPE# {
+        return this[point.x.toInt(), point.y.toInt()]
+    }
+
+    fun get(row: Int): #TYPE#Array {
+        require(row in 0 until this.width) { "X index out of bounds" }
+        return this.internalGrid.copyOfRange(row * this.width, (row + 1) * this.width)
+    }
+
+    override fun get(row: Int, arrayType: Class<#TYPE#>): Array<#TYPE#> {
+        return this.get(row).toTypedArray()
+    }
+
+    override fun getOrNull(x: Int, y: Int): #TYPE#? {
+        if (x !in 0 until this.width || y !in 0 until this.height) {
+            return null
+        }
+        return this.internalGrid[y * this.width + x]
+    }
+
+    override fun getOrNull(point: Point): #TYPE#? {
+        return this.getOrNull(point.x.toInt(), point.y.toInt())
+    }
+
+    override fun transposed(): Grid<#TYPE#> {
+        return TransposedGrid(this)
+    }
+
+    override operator fun set(x: Int, y: Int, value: #TYPE#) {
+        require(x in 0 until this.width) { "X index out of bounds" }
+        require(y in 0 until this.height) { "Y index out of bounds" }
+        this.internalGrid[y * this.width + x] = value
+    }
+
+    override operator fun set(point: Point, value: #TYPE#) {
+        this[point.x.toInt(), point.y.toInt()] = value
+    }
+
+    override fun set(row: Int, value: Array<#TYPE#>) {
+        require(row in 0 until this.height) { "Row index out of bounds" }
+        require(value.size == this.width) { "Row size does not match grid width" }
+        value.to#TYPE#Array().copyInto(this.internalGrid, row * this.width)
+    }
+
+    fun toList(): List<List<#TYPE#>> {
+        return this.internalGrid.asList().chunked(this.width)
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is #TYPE#Grid) return false
+
+        if (!this.internalGrid.contentEquals(other.internalGrid)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return this.internalGrid.contentHashCode()
+    }
+
+    override fun toString(): String {
+        val grid = this
+        return buildString {
+            this.appendLine("Grid(${grid.width} x ${grid.height}) [")
+
+            val strings = grid.internalGrid.map { it.toString() }
+            val maxElementWidth = strings.maxOfOrNull { it.length } ?: 0
+
+            for (rowIndex in 0 until height) {
+                this.append("  [")
+                for (i in 0 until width) {
+                    val element = strings[rowIndex * width + i]
+                    this.append(element.padStart(maxElementWidth))
+                    if (i < width - 1) {
+                        this.append(" ")
+                    }
+                }
+                this.appendLine("]")
+            }
+
+            this.appendLine("]")
+        }
+    }
+
+    companion object {
+        fun filled(width: Int, height: Int, value: #TYPE#): #TYPE#Grid {
+            val gridArray = #TYPE#Array(width * height) { value }
+            return #TYPE#Grid(width, height, gridArray)
+        }
+
+        fun Iterable<Iterable<#TYPE#>>.to#TYPE#Grid(): #TYPE#Grid {
+            val outer = this.toList()
+            val width = outer.maxOf(Iterable<#TYPE#>::count)
+            val gridArray = #TYPE#Array(width * outer.size) { index ->
+                val x = index % width
+                val y = index / width
+                outer[y].elementAt(x)
+            }
+            return #TYPE#Grid(width, outer.size, gridArray)
+        }
+    }
+}
