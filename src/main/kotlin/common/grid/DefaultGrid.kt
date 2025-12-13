@@ -35,8 +35,8 @@ class DefaultGrid<T : Any>(
     })
 
     override operator fun get(x: Int, y: Int): T {
-        require(x in 0 until this.width) { "X index out of bounds" }
-        require(y in 0 until this.height) { "Y index out of bounds" }
+        require(x in 0 until this.width) { "X index $x out of bounds for range 0..<$width" }
+        require(y in 0 until this.height) { "Y index $y out of bounds for range 0..<$height" }
         return this.internalGrid[y * this.width + x]
     }
 
@@ -98,10 +98,11 @@ class DefaultGrid<T : Any>(
     }
 
     override fun toString(): String {
+        val grid = this
         return buildString {
-            this.appendLine("Grid(${this@DefaultGrid.width} x ${this@DefaultGrid.height}) [")
+            this.appendLine("Grid(${grid.width} x ${grid.height}) [")
 
-            val strings = this@DefaultGrid.internalGrid.map { it.toString() }
+            val strings = grid.internalGrid.map { it.toString() }
             val maxElementWidth = strings.maxOfOrNull { it.length } ?: 0
 
             for (rowIndex in 0 until height) {

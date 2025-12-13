@@ -28,7 +28,7 @@ interface Grid<T : Any> : Iterable<T> {
 
 inline fun <reified T : Any> Iterable<Iterable<T>>.toGrid(): Grid<T> {
     val outer = this.toList()
-    val width = outer.first().count()
+    val width = outer.maxOf(Iterable<T>::count)
     val gridArray = Array(width * outer.size) { index ->
         val x = index % width
         val y = index / width
