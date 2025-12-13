@@ -62,7 +62,7 @@ class Day05 : AOCSolution {
 
                 // The two ranges do overlap, because the tail of the first range
                 // is in the second range.
-                if (upperRange.first <= lowerRange.last) {
+                if (upperRange.first <= lowerRange.last || lowerRange.last == upperRange.first - 1) {
                     ranges[i - 1] = LongRange(
                         lowerRange.first,
                         maxOf(lowerRange.last, upperRange.last)
