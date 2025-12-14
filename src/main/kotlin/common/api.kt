@@ -113,3 +113,12 @@ fun DoubleArray.variance(): Double {
 fun DoubleArray.standardDeviation(): Double {
     return sqrt(variance())
 }
+
+fun CharSequence.indexNotOf(char: Char): Int {
+    for (i in indices) {
+        if (char != this[i]) {
+            return i
+        }
+    }
+    return -1
+}
