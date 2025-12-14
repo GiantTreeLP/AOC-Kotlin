@@ -38,7 +38,7 @@ class #TYPE#Grid(
         return this[point.x.toInt(), point.y.toInt()]
     }
 
-    fun get(row: Int): #TYPE#Array {
+    operator fun get(row: Int): #TYPE#Array {
         require(row in 0 until this.width) { "X index out of bounds" }
         return this.internalGrid.copyOfRange(row * this.width, (row + 1) * this.width)
     }

@@ -3,7 +3,7 @@ package common.grid
 import common.Point
 import common.Rectangle
 
-class Transposed#TYPE#Grid(private val grid: #TYPE#Grid) : Grid<#TYPE#>, Iterable<#TYPE#> {
+class Transposed#TYPE#Grid(private val grid: #TYPE#Grid) : Grid<#TYPE#> {
     override val width = this.grid.height
     override val height = this.grid.width
     override val bounds = Rectangle(Point(0, 0), Point(this.width, this.height))
@@ -25,9 +25,16 @@ class Transposed#TYPE#Grid(private val grid: #TYPE#Grid) : Grid<#TYPE#>, Iterabl
     }
 
     override fun get(row: Int, arrayType: Class<#TYPE#>): Array<#TYPE#> {
-        require(row in 0 until this.width) { "Row index out of bounds" }
+        require(row in 0 until this.height) { "Row index $row out of bounds for height $height" }
         return Array(this.width) { y ->
             this.grid[row, y]
+        }
+    }
+
+    operator fun get(row: Int): #TYPE#Array {
+        require(row in 0 until this.height) { "Row index $row out of bounds for height $height" }
+        return #TYPE#Array(this.width) {
+            this.grid[row, it]
         }
     }
 
