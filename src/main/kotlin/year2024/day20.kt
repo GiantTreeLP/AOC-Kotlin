@@ -140,7 +140,7 @@ class Day20 : AOCSolution {
         val end: Cell.Track.End,
         val distanceFieldStart: Grid<Int>,
         val distanceFieldEnd: Grid<Int>,
-        val cheatVectors: List<Point>
+        val cheatVectors: List<Point>,
     )
 
     private fun parseTrackAndCreateCheatVectors(inputFile: String, maximumDistance: Int): TrackAndCheatVectors {
@@ -158,8 +158,8 @@ class Day20 : AOCSolution {
             }
         }.toGrid()
 
-        val start = track.values.first { it is Cell.Track.Start }
-        val end = track.values.first { it is Cell.Track.End }
+        val start = track.first { it is Cell.Track.Start }
+        val end = track.first { it is Cell.Track.End }
 
         val (distanceFieldStart, distanceFieldEnd) = calculateDistances(track, start, end)
 
@@ -176,12 +176,14 @@ class Day20 : AOCSolution {
     }
 
     override fun part1(inputFile: String): String {
-        val (track,
+        val (
+            track,
             _,
             end,
             distanceFieldStart,
             distanceFieldEnd,
-            cheatVectors) = parseTrackAndCreateCheatVectors(inputFile, 2)
+            cheatVectors,
+        ) = parseTrackAndCreateCheatVectors(inputFile, 2)
 
         val goodCheats = calculateCheats(
             track,
@@ -195,12 +197,14 @@ class Day20 : AOCSolution {
     }
 
     override fun part2(inputFile: String): String {
-        val (track,
+        val (
+            track,
             _,
             end,
             distanceFieldStart,
             distanceFieldEnd,
-            cheatVectors) = parseTrackAndCreateCheatVectors(inputFile, 20)
+            cheatVectors,
+        ) = parseTrackAndCreateCheatVectors(inputFile, 20)
 
         val goodCheats = calculateCheats(
             track,
