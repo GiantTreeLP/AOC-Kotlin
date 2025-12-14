@@ -58,4 +58,28 @@ class Transposed#TYPE#Grid(private val grid: #TYPE#Grid) : Grid<#TYPE#>, Iterabl
             this.grid[y, row] = value[y]
         }
     }
+
+    override fun toString(): String {
+        val grid = this
+        return buildString {
+            this.appendLine("Grid(${grid.width} x ${grid.height}) [")
+
+            val strings = grid.map { it.toString() }
+            val maxElementWidth = strings.maxOfOrNull { it.length } ?: 0
+
+            for (rowIndex in 0 until height) {
+                this.append("  [")
+                for (i in 0 until width) {
+                    val element = strings[rowIndex * width + i]
+                    this.append(element.padStart(maxElementWidth))
+                    if (i < width - 1) {
+                        this.append(" ")
+                    }
+                }
+                this.appendLine("]")
+            }
+
+            this.appendLine("]")
+        }
+    }
 }
