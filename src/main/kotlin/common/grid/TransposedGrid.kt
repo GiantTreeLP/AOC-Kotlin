@@ -2,6 +2,7 @@ package common.grid
 
 import common.Point
 import common.Rectangle
+import kotlin.collections.map
 
 class TransposedGrid<T : Any>(private val grid: Grid<T>) : Grid<T>, Iterable<T> {
     override val width = this.grid.height
@@ -26,11 +27,11 @@ class TransposedGrid<T : Any>(private val grid: Grid<T>) : Grid<T>, Iterable<T> 
     }
 
     override fun get(row: Int, arrayType: Class<T>): Array<T> {
-        require(row in 0 until this.width) { "Row index out of bounds" }
+        require(row in 0 until this.height) { "Row index $row out of bounds for height $height" }
         @Suppress("UNCHECKED_CAST")
-        return (java.lang.reflect.Array.newInstance(arrayType, this.height) as Array<T>)
+        return (java.lang.reflect.Array.newInstance(arrayType, this.width) as Array<T>)
             .apply {
-                for (y in indices) {
+                for (y in this.indices) {
                     this[y] = this@TransposedGrid.grid[row, y]
                 }
             }
@@ -61,6 +62,30 @@ class TransposedGrid<T : Any>(private val grid: Grid<T>) : Grid<T>, Iterable<T> 
         require(value.size == this.height) { "Row size does not match grid width" }
         for (y in 0 until this.height) {
             this.grid[y, row] = value[y]
+        }
+    }
+
+    override fun toString(): String {
+        val grid = this
+        return buildString {
+            this.appendLine("Grid(${grid.width} x ${grid.height}) [")
+
+            val strings = grid.map { it.toString() }
+            val maxElementWidth = strings.maxOfOrNull { it.length } ?: 0
+
+            for (rowIndex in 0 until height) {
+                this.append("  [")
+                for (i in 0 until width) {
+                    val element = strings[rowIndex * width + i]
+                    this.append(element.padStart(maxElementWidth))
+                    if (i < width - 1) {
+                        this.append(" ")
+                    }
+                }
+                this.appendLine("]")
+            }
+
+            this.appendLine("]")
         }
     }
 }

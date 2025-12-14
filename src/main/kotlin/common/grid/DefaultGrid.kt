@@ -45,7 +45,7 @@ class DefaultGrid<T : Any>(
     }
 
     override fun get(row: Int, arrayType: Class<T>): Array<T> {
-        require(row in 0 until this.width) { "X index out of bounds" }
+        require(row in 0 until this.height) { "Row index $row out of bounds for range 0..<$height" }
         return this.internalGrid.copyOfRange(row * this.width, (row + 1) * this.width)
     }
 
