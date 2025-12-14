@@ -3,7 +3,7 @@ package year2024
 import com.google.auto.service.AutoService
 import common.AOCSolution
 import common.grid.Grid
-import common.grid.mapIndexed
+import common.grid.mapGridIndexed
 import common.grid.toGrid
 import common.readResourceLines
 
@@ -90,7 +90,7 @@ class Day10 : AOCSolution {
         val input = readResourceLines(inputFile)
         val grid = input.map { string -> string.map { it.digitToInt() } }.toGrid()
 
-        val trails = grid.mapIndexed { x, y, i ->
+        val trails = grid.mapGridIndexed { x, y, i ->
             if (i == 0) {
                 Cell.Trailhead(x, y, i)
             } else {

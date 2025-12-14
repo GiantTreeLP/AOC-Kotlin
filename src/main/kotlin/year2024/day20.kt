@@ -4,7 +4,7 @@ import com.google.auto.service.AutoService
 import common.*
 import common.grid.DefaultGrid
 import common.grid.Grid
-import common.grid.map
+import common.grid.mapGrid
 import common.grid.toGrid
 import kotlin.math.abs
 import kotlin.math.min
@@ -55,7 +55,7 @@ class Day20 : AOCSolution {
         }
 
         val totalDistance = distanceToStart[end.position]
-        val distanceToEnd = distanceToStart.map { distance ->
+        val distanceToEnd = distanceToStart.mapGrid { distance ->
             if (distance == Int.MAX_VALUE) {
                 Int.MAX_VALUE
             } else {

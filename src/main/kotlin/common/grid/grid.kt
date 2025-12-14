@@ -43,7 +43,7 @@ fun Grid<Char>.toStrings(): Array<String> {
     }
 }
 
-inline fun <T : Any, reified U : Any> Grid<T>.map(transform: (T) -> U): Grid<U> {
+inline fun <T : Any, reified U : Any> Grid<T>.mapGrid(transform: (T) -> U): Grid<U> {
     val gridArray = Array(width * height) { index ->
         transform(this.values[index])
     }
@@ -51,7 +51,7 @@ inline fun <T : Any, reified U : Any> Grid<T>.map(transform: (T) -> U): Grid<U> 
     return DefaultGrid(width, height, gridArray)
 }
 
-inline fun <T : Any, reified U : Any> Grid<T>.mapIndexed(transform: (x: Int, y: Int, T) -> U): Grid<U> {
+inline fun <T : Any, reified U : Any> Grid<T>.mapGridIndexed(transform: (x: Int, y: Int, T) -> U): Grid<U> {
     val gridArray = Array(width * height) { index ->
         val x = index % width
         val y = index / width
@@ -61,17 +61,17 @@ inline fun <T : Any, reified U : Any> Grid<T>.mapIndexed(transform: (x: Int, y: 
     return DefaultGrid(width, height, gridArray)
 }
 
-inline fun <T : Any, reified U : Any> Grid<T>.mapIndexed(transform: (point: Point, T) -> U): Grid<U> {
-    return this.mapIndexed { x, y, value -> transform(Point(x, y), value) }
+inline fun <T : Any, reified U : Any> Grid<T>.mapGridIndexed(transform: (point: Point, T) -> U): Grid<U> {
+    return this.mapGridIndexed { x, y, value -> transform(Point(x, y), value) }
 }
 
 
 inline fun <reified T : Any> Grid<T>.flipHorizontal(): Grid<T> {
-    return this.mapIndexed { x, y, _ -> this[this.width - x - 1, y] }
+    return this.mapGridIndexed { x, y, _ -> this[this.width - x - 1, y] }
 }
 
 inline fun <reified T : Any> Grid<T>.flipVertical(): Grid<T> {
-    return this.mapIndexed { x, y, _ -> this[x, this.height - y - 1] }
+    return this.mapGridIndexed { x, y, _ -> this[x, this.height - y - 1] }
 }
 
 inline fun <reified T : Any> Grid<T>.diagonal(offset: Int): Array<T> {
