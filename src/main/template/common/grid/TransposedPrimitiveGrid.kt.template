@@ -9,13 +9,6 @@ class Transposed#TYPE#Grid(private val grid: #TYPE#Grid) : Grid<#TYPE#> {
     override val bounds = Rectangle(Point(0, 0), Point(this.width, this.height))
     override val indices = PointProgression(width.toLong(), height.toLong(), 1)
 
-    override val values: Array<#TYPE#>
-        get() = Array(this.width * this.height) { index ->
-            val x = index % this.width
-            val y = index / this.width
-            this.grid[y, x]
-        }
-
     override operator fun get(x: Int, y: Int): #TYPE# {
         return this.grid[y, x]
     }
@@ -48,6 +41,12 @@ class Transposed#TYPE#Grid(private val grid: #TYPE#Grid) : Grid<#TYPE#> {
 
     override fun transposed(): #TYPE#Grid {
         return this.grid
+    }
+   
+    fun rows(): Array<#TYPE#Array> {
+        return Array(this.height) { row ->
+            this[row]
+        }
     }
 
     override operator fun set(x: Int, y: Int, value: #TYPE#) {

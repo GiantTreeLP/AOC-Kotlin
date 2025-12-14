@@ -8,7 +8,6 @@ interface Grid<T : Any> : Iterable<T> {
     val width: Int
     val height: Int
     val bounds: Rectangle
-    val values: Array<T>
     val indices: PointProgression
 
     operator fun get(row: Int, arrayType: Class<T>): Array<T>
@@ -43,34 +42,28 @@ fun Grid<Char>.toStrings(): Array<String> {
     }
 }
 
-inline fun <T : Any, reified U : Any> Grid<T>.mapGrid(transform: (T) -> U): Grid<U> {
-    val gridArray = Array(width * height) { index ->
-        transform(this.values[index])
+fun <T : Any, U : Any> Grid<T>.mapGrid(transform: (T) -> U): Grid<U> {
+    return DefaultGrid(width, height) { x, y ->
+        transform(this[x, y])
     }
-
-    return DefaultGrid(width, height, gridArray)
 }
 
-inline fun <T : Any, reified U : Any> Grid<T>.mapGridIndexed(transform: (x: Int, y: Int, T) -> U): Grid<U> {
-    val gridArray = Array(width * height) { index ->
-        val x = index % width
-        val y = index / width
+fun <T : Any, U : Any> Grid<T>.mapGridIndexed(transform: (x: Int, y: Int, T) -> U): Grid<U> {
+    return DefaultGrid(width, height) { x, y ->
         transform(x, y, this[x, y])
     }
-
-    return DefaultGrid(width, height, gridArray)
 }
 
-inline fun <T : Any, reified U : Any> Grid<T>.mapGridIndexed(transform: (point: Point, T) -> U): Grid<U> {
-    return this.mapGridIndexed { x, y, value -> transform(Point(x, y), value) }
+fun <T : Any, U : Any> Grid<T>.mapGridIndexed(transform: (point: Point, T) -> U): Grid<U> {
+    return DefaultGrid(width, height) { p -> transform(p, this[p]) }
 }
 
 
-inline fun <reified T : Any> Grid<T>.flipHorizontal(): Grid<T> {
+fun <T : Any> Grid<T>.flipHorizontal(): Grid<T> {
     return this.mapGridIndexed { x, y, _ -> this[this.width - x - 1, y] }
 }
 
-inline fun <reified T : Any> Grid<T>.flipVertical(): Grid<T> {
+fun <T : Any> Grid<T>.flipVertical(): Grid<T> {
     return this.mapGridIndexed { x, y, _ -> this[x, this.height - y - 1] }
 }
 

@@ -12,8 +12,6 @@ class #TYPE#Grid(
 
     override val bounds = Rectangle(Point(0, 0), Point(this.width, this.height))
 
-    override val values get() = this.internalGrid.toTypedArray()
-
     override val indices = PointProgression(width.toLong(), height.toLong(), 1)
 
     constructor(width: Int, height: Int, initializer: (x: Int, y: Int) -> #TYPE#) : this(
@@ -60,6 +58,12 @@ class #TYPE#Grid(
 
     override fun transposed(): Transposed#TYPE#Grid {
         return Transposed#TYPE#Grid(this)
+    }
+    
+    fun rows(): Array<#TYPE#Array> {
+        return Array(this.height) { row ->
+            this[row]
+        }
     }
 
     override operator fun set(x: Int, y: Int, value: #TYPE#) {

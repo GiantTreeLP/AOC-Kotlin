@@ -10,14 +10,6 @@ class TransposedGrid<T : Any>(private val grid: Grid<T>) : Grid<T>, Iterable<T> 
     override val bounds = Rectangle(Point(0, 0), Point(this.width, this.height))
     override val indices = PointProgression(width.toLong(), height.toLong(), 1)
 
-    @Suppress("UNCHECKED_CAST")
-    override val values: Array<T>
-        get() = Array<Any?>(this.width * this.height) { index ->
-            val x = index % this.width
-            val y = index / this.width
-            this.grid[y, x]
-        } as Array<T>
-
     override operator fun get(x: Int, y: Int): T {
         return this.grid[y, x]
     }

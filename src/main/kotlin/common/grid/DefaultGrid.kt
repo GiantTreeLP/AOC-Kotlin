@@ -12,8 +12,6 @@ class DefaultGrid<T : Any>(
 
     override val bounds = Rectangle(Point(0, 0), Point(this.width, this.height))
 
-    override val values get() = this.internalGrid
-
     override val indices = PointProgression(width.toLong(), height.toLong(), 1)
 
     @Suppress("UNCHECKED_CAST")
