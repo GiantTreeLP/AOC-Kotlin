@@ -2,7 +2,7 @@ fun <T> Array<T>.mapTo#TYPE#Array(transform: (T) -> #TYPE#): #TYPE#Array {
     return #TYPE#Array(this.size) { transform(this[it]) }
 }
 
-fun <T> Array<T>.mapTo#TYPE#Array(
+inline fun <T> Array<T>.mapTo#TYPE#Array(
     fromIndex: Int = 0,
     toIndex: Int = 0,
     transform: (T) -> #TYPE#,
