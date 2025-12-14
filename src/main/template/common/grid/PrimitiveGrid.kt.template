@@ -58,7 +58,7 @@ class #TYPE#Grid(
         return this.getOrNull(point.x.toInt(), point.y.toInt())
     }
 
-    override fun transposed(): Grid<#TYPE#> {
+    override fun transposed(): Transposed#TYPE#Grid {
         return Transposed#TYPE#Grid(this)
     }
 

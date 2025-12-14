@@ -46,7 +46,7 @@ class Transposed#TYPE#Grid(private val grid: #TYPE#Grid) : Grid<#TYPE#> {
         return this.getOrNull(point.x.toInt(), point.y.toInt())
     }
 
-    override fun transposed(): Grid<#TYPE#> {
+    override fun transposed(): #TYPE#Grid {
         return this.grid
     }
 
