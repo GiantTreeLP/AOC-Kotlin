@@ -1,4 +1,3 @@
-import org.gradle.kotlin.dsl.sourceSets
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 val autoServiceKspVersion = "1.2.0"
@@ -35,31 +34,42 @@ tasks.test {
 sourceSets {
     main {
         kotlin {
-            srcDir(layout.buildDirectory.dir("generated/grid"))
+            srcDir(layout.buildDirectory.dir("generated/common"))
         }
     }
 }
 
 tasks.compileKotlin {
-    dependsOn("generateGrids")
+    dependsOn("generateCode")
     compilerOptions.jvmTarget.set(JvmTarget.JVM_24)
 }
 
-tasks.register<DefaultTask>("generateGrids") {
-    val destinationDir = file(layout.buildDirectory.dir("generated/grid"))
+tasks.register<Copy>("generateCode") {
+    val destinationDir = file(layout.buildDirectory.dir("generated/common"))
     destinationDir.deleteRecursively()
     destinationDir.mkdirs()
-    val tree = fileTree(layout.projectDirectory.dir("/src/main/template/common/grid")) {
+    val inputDir = file(layout.projectDirectory.dir("src/main/template/common"))
+    val tree = fileTree(inputDir) {
         include("**/*.kt.template")
     }
+
+    // Replace primitives
     listOf("Boolean", "Byte", "Short", "Char", "Int", "Long", "Float", "Double").map { primitiveType ->
         tree.visit {
-            val outputFile = destinationDir.resolve(
-                file.name
-                    .replace("Primitive", primitiveType)
-                    .replace(".template$".toRegex(), "")
-            )
+            if (this.isDirectory) return@visit
+
+            // Recreate the source file tree
+            val outputFile =
+                destinationDir.resolve(
+                    file.relativeTo(inputDir).resolveSibling(
+                        file.name
+                            .replace("Primitive", primitiveType)
+                            .replace(".template$".toRegex(), "")
+                    )
+                )
+
             val outputContent = this.file.readText().replace("#TYPE#", primitiveType)
+            outputFile.parentFile.mkdirs()
             outputFile.writeText(outputContent)
         }
     }
