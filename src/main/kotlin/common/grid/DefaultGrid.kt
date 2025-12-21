@@ -14,24 +14,6 @@ class DefaultGrid<T : Any>(
 
     override val indices = PointProgression(width.toLong(), height.toLong(), 1)
 
-    @Suppress("UNCHECKED_CAST")
-    constructor(width: Int, height: Int, initializer: (x: Int, y: Int) -> T) : this(
-        width,
-        height,
-        (java.lang.reflect.Array.newInstance(
-            Any::class.java,
-            width * height
-        ) as Array<T>).apply {
-            this.indices.forEach { index ->
-                this[index] = initializer(index % width, index / width)
-            }
-        }
-    )
-
-    constructor(width: Int, height: Int, initializer: (Point) -> T) : this(width, height, { x, y ->
-        initializer(Point(x, y))
-    })
-
     override operator fun get(x: Int, y: Int): T {
         require(x in 0 until this.width) { "X index $x out of bounds for range 0..<$width" }
         require(y in 0 until this.height) { "Y index $y out of bounds for range 0..<$height" }

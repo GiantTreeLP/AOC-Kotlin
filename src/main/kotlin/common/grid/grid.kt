@@ -60,34 +60,56 @@ inline fun <reified T : Any> Array<Array<T>>.toGrid(): Grid<T> {
     return DefaultGrid(width, height, gridArray)
 }
 
+inline fun <reified T : Any> DefaultGrid(width: Int, height: Int, initializer: (x: Int, y: Int) -> T): DefaultGrid<T> {
+    val grid = arrayOfNulls<T>(width * height)
+
+    for (y in 0 until height) {
+        for (x in 0 until width) {
+            grid[(y * width + x)] = initializer(x, y)
+        }
+    }
+
+    return DefaultGrid(
+        width,
+        height,
+        grid.requireNoNulls()
+    )
+}
+
+inline fun <reified T : Any> DefaultGrid(width: Int, height: Int, initializer: (Point) -> T): DefaultGrid<T> {
+    return DefaultGrid(width, height) { x, y ->
+        initializer(Point(x, y))
+    }
+}
+
 fun Grid<Char>.toStrings(): Array<String> {
     return Array(this.height) { y ->
         String(this[y, Char::class.javaObjectType].toCharArray())
     }
 }
 
-fun <T : Any, U : Any> Grid<T>.mapGrid(transform: (T) -> U): Grid<U> {
+inline fun <T : Any, reified U : Any> Grid<T>.mapGrid(transform: (T) -> U): Grid<U> {
     return DefaultGrid(width, height) { x, y ->
         transform(this[x, y])
     }
 }
 
-fun <T : Any, U : Any> Grid<T>.mapGridIndexed(transform: (x: Int, y: Int, T) -> U): Grid<U> {
+inline fun <T : Any, reified U : Any> Grid<T>.mapGridIndexed(transform: (x: Int, y: Int, T) -> U): Grid<U> {
     return DefaultGrid(width, height) { x, y ->
         transform(x, y, this[x, y])
     }
 }
 
-fun <T : Any, U : Any> Grid<T>.mapGridIndexed(transform: (point: Point, T) -> U): Grid<U> {
+inline fun <T : Any, reified U : Any> Grid<T>.mapGridIndexed(transform: (point: Point, T) -> U): Grid<U> {
     return DefaultGrid(width, height) { p -> transform(p, this[p]) }
 }
 
 
-fun <T : Any> Grid<T>.flipHorizontal(): Grid<T> {
+inline fun <reified T : Any> Grid<T>.flipHorizontal(): Grid<T> {
     return this.mapGridIndexed { x, y, _ -> this[this.width - x - 1, y] }
 }
 
-fun <T : Any> Grid<T>.flipVertical(): Grid<T> {
+inline fun <reified T : Any> Grid<T>.flipVertical(): Grid<T> {
     return this.mapGridIndexed { x, y, _ -> this[x, this.height - y - 1] }
 }
 
@@ -168,9 +190,11 @@ fun <T : Any> Grid<T>.pointIterator(): Iterator<Pair<Point, T>> {
 }
 
 inline fun <T : Any> Grid<T>.positionOfFirstOrNull(predicate: (T) -> Boolean): Point? {
-    this.pointIterator().forEach { (p, e) ->
-        if (predicate(e)) {
-            return p
+    for (y in 0 until height) {
+        for (x in 0 until width) {
+            if (predicate(this[x, y])) {
+                return Point(x, y)
+            }
         }
     }
 
