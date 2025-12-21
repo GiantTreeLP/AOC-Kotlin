@@ -36,6 +36,30 @@ inline fun <reified T : Any> Iterable<Iterable<T>>.toGrid(): Grid<T> {
     return DefaultGrid(width, outer.size, gridArray)
 }
 
+inline fun <reified T : Any> Array<out Iterable<T>>.toGrid(): Grid<T> {
+    val width = this.maxOf(Iterable<T>::count)
+    val gridArray = Array(width * this.size) { index ->
+        val x = index % width
+        val y = index / width
+        this[y].elementAt(x)
+    }
+    return DefaultGrid(width, this.size, gridArray)
+}
+
+inline fun <reified T : Any> Array<Array<T>>.toGrid(): Grid<T> {
+    val height = this.size
+    val width = this.maxOf(Array<out T>::size)
+
+    @Suppress("UNCHECKED_CAST")
+    val gridArray = arrayOfNulls<T>(width * height).apply {
+        for (y in 0 until height) {
+            this@toGrid[y].copyInto(this, y * width)
+        }
+    }.requireNoNulls()
+
+    return DefaultGrid(width, height, gridArray)
+}
+
 fun Grid<Char>.toStrings(): Array<String> {
     return Array(this.height) { y ->
         String(this[y, Char::class.javaObjectType].toCharArray())
@@ -141,4 +165,18 @@ fun <T : Any> Grid<T>.pointIterator(): Iterator<Pair<Point, T>> {
             yield(point to this@pointIterator[point])
         }
     }
+}
+
+inline fun <T : Any> Grid<T>.positionOfFirstOrNull(predicate: (T) -> Boolean): Point? {
+    this.pointIterator().forEach { (p, e) ->
+        if (predicate(e)) {
+            return p
+        }
+    }
+
+    return null
+}
+
+inline fun <T : Any> Grid<T>.positionOfFirst(predicate: (T) -> Boolean): Point {
+    return positionOfFirstOrNull(predicate) ?: throw NoSuchElementException()
 }
