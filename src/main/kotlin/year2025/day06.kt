@@ -3,12 +3,12 @@ package year2025
 import com.google.auto.service.AutoService
 import common.AOCSolution
 import common.grid.CharGrid.Companion.toCharGrid
+import common.grid.mapToLongArray
 import common.grid.rows
 import common.grid.toGrid
 import common.indexNotOf
 import common.readResourceLines
 import common.spaceSplitRegex
-import mapToLongArray
 
 @AutoService(AOCSolution::class)
 class Day06 : AOCSolution {

@@ -1,8 +1,20 @@
+package common.grid
+
 fun <T> Array<T>.mapTo#TYPE#Array(transform: (T) -> #TYPE#): #TYPE#Array {
     return #TYPE#Array(this.size) { transform(this[it]) }
 }
 
 inline fun <T> Array<T>.mapTo#TYPE#Array(
+    fromIndex: Int = 0,
+    toIndex: Int = 0,
+    transform: (T) -> #TYPE#,
+): #TYPE#Array {
+    require(fromIndex in 0..toIndex) { "fromIndex $fromIndex is out of range [0..$toIndex]" }
+    require(fromIndex in indices && toIndex in indices) { "fromIndex $fromIndex or toIndex $toIndex is out of range [0..<$size]" }
+    return #TYPE#Array(toIndex - fromIndex + 1) { transform(this[it]) }
+}
+
+inline fun <T> List<T>.mapTo#TYPE#Array(
     fromIndex: Int = 0,
     toIndex: Int = 0,
     transform: (T) -> #TYPE#,
