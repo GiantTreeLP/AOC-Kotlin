@@ -1,6 +1,6 @@
 package common.grid
 
-class GridIterator<T : Any>(private val grid: Grid<T>) : Iterator<T> {
+class GridIterator<T>(private val grid: Grid<T>) : Iterator<T> {
     private val width = this.grid.width
     private val height = this.grid.height
     private var x = 0

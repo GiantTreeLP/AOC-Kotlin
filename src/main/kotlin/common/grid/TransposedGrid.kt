@@ -4,7 +4,7 @@ import common.Point
 import common.Rectangle
 import kotlin.collections.map
 
-class TransposedGrid<T : Any>(private val grid: Grid<T>) : Grid<T>, Iterable<T> {
+class TransposedGrid<T>(private val grid: Grid<T>) : Grid<T>, Iterable<T> {
     override val width = this.grid.height
     override val height = this.grid.width
     override val bounds = Rectangle(Point(0, 0), Point(this.width, this.height))

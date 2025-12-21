@@ -3,7 +3,7 @@ package common.grid
 import common.Point
 import common.Rectangle
 
-class DefaultGrid<T : Any>(
+class DefaultGrid<T>(
     override val width: Int,
     override val height: Int,
     grid: Array<T>
