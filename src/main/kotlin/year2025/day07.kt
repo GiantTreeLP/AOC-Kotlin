@@ -2,6 +2,7 @@ package year2025
 
 import com.google.auto.service.AutoService
 import common.*
+import common.grid.mapGrid
 import common.grid.positionOfFirst
 import common.grid.toGrid
 import java.util.*
@@ -20,7 +21,8 @@ class Day07 : AOCSolution {
         for (y in 1 until diagram.height) {
             for (x in 0 until diagram.width) {
                 // Search for beam sources in the preceding row
-                if (diagram[x, y - 1] in Cell.beamSourceTypes) {
+                val cell = diagram[x, y - 1]
+                if (cell == Cell.Splitter || cell == Cell.Start) {
                     // Simulate the beam moving down
                     when (diagram[x, y]) {
                         Cell.Empty -> diagram[x, y] = Cell.Beam
@@ -48,17 +50,26 @@ class Day07 : AOCSolution {
 
         val startPosition = diagram.positionOfFirst { it == Cell.Start }
 
+        val splitterDiagram = diagram.mapGrid {
+            when (it) {
+                Cell.Splitter, Cell.Start -> {
+                    Splitter()
+                }
+
+                else -> emptySplitter
+            }
+        }
+
         // Working stack of beam origin and split origin positions
         val stack = ArrayDeque<Pair<Position, Position>>()
         stack.add(startPosition to startPosition)
 
         // Splitter positions mapped to the count of timelines to them
         // Start with the start position and 1 timeline.
-        val splitters = mutableMapOf<Position, Long>(startPosition to 1)
-
-        // Keep track of all splitters for which new beams have been spawned already
-        // Could be used to solve part 1, as well
-        val spawnedSplitters = mutableSetOf<Position>()
+        splitterDiagram[startPosition].apply {
+            incomingBeams = 1
+            hasSpawned = true
+        }
 
         // Count the timelines per diagram exit, which is the bottom-most row
         val diagramExits = LongArray(diagram.width)
@@ -66,21 +77,22 @@ class Day07 : AOCSolution {
         while (stack.isNotEmpty()) {
             // Breadth first search for memorizing the amount of paths to a splitter
             val (beamOrigin, splitOrigin) = stack.poll()
-            val originPathCount = splitters.getValue(splitOrigin)
+            val originPathCount = splitterDiagram[splitOrigin].incomingBeams
 
             val nextPosition = beamOrigin + Direction.DOWN
 
             if (nextPosition.y < height) {
                 if (diagram[nextPosition] == Cell.Splitter) {
-                    if (nextPosition !in spawnedSplitters) {
+                    val splitter = splitterDiagram[nextPosition]
+                    if (!splitter.hasSpawned) {
                         // Only spawn new beams, if they weren't spawned already
                         stack.add((nextPosition + Direction.LEFT) to nextPosition)
                         stack.add((nextPosition + Direction.RIGHT) to nextPosition)
-                        spawnedSplitters.add(nextPosition)
+                        splitter.hasSpawned = true
                         // Initialize the count
-                        splitters[nextPosition] = originPathCount
+                        splitter.incomingBeams = originPathCount
                     } else {
-                        splitters.computeIfPresent(nextPosition) { _, v -> v + originPathCount }
+                        splitter.incomingBeams += originPathCount
                     }
                 } else {
                     // Just move down
@@ -96,6 +108,10 @@ class Day07 : AOCSolution {
     }
 
     private companion object {
+        data class Splitter(var incomingBeams: Long = 0L, var hasSpawned: Boolean = false)
+
+        val emptySplitter = Splitter()
+
         enum class Cell(val char: Char) {
             Start('S'),
             Empty('.'),
@@ -107,9 +123,15 @@ class Day07 : AOCSolution {
             }
 
             companion object {
-                fun byChar(char: Char) = entries.first { it.char == char }
+                fun byChar(char: Char) = when (char) {
+                    'S' -> Start
+                    '.' -> Empty
+                    '^' -> Splitter
+                    '|' -> Beam
 
-                val beamSourceTypes = arrayOf(Start, Beam)
+                    else -> throw NoSuchElementException()
+                }
+
             }
         }
     }
