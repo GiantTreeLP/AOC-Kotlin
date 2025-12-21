@@ -18,11 +18,11 @@ inline fun IntArray.mapWindowed(size: Int, transform: (array: IntArray, from: In
     }
 }
 
-inline fun <reified T, reified U> Array<T>.mapArray(transform: (T) -> U): Array<U> {
+inline fun <T, reified U> Array<T>.mapArray(transform: (T) -> U): Array<U> {
     return Array(this.size) { transform(this[it]) }
 }
 
-inline fun <reified T, reified U> List<T>.mapArray(transform: (T) -> U): Array<U> {
+inline fun <T, reified U> List<T>.mapArray(transform: (T) -> U): Array<U> {
     return Array(this.size) { transform(this[it]) }
 }
 
