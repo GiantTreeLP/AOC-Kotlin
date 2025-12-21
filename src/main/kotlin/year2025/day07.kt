@@ -60,7 +60,7 @@ class Day07 : AOCSolution {
         // Could be used to solve part 1, as well
         val spawnedSplitters = mutableSetOf<Position>()
 
-        // Count the timelines per diagram exit, which are all
+        // Count the timelines per diagram exit, which is the bottom-most row
         val diagramExits = LongArray(diagram.width)
 
         while (stack.isNotEmpty()) {
