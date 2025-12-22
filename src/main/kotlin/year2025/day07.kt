@@ -2,9 +2,8 @@ package year2025
 
 import com.google.auto.service.AutoService
 import common.*
-import common.grid.mapGrid
-import common.grid.positionOfFirst
-import common.grid.toGrid
+import common.grid.CharGrid.Companion.mapGrid
+import common.grid.CharGrid.Companion.toCharGrid
 import java.util.*
 
 @AutoService(AOCSolution::class)
@@ -14,22 +13,22 @@ class Day07 : AOCSolution {
 
     override fun part1(inputFile: String): String {
         val diagram = readResourceLines(inputFile)
-            .mapArray { line -> line.mapArray { char -> Cell.byChar(char) } }
-            .toGrid()
+            .mapArray { line -> line.toCharArray() }
+            .toCharGrid()
 
         var count = 0
         for (y in 1 until diagram.height) {
             for (x in 0 until diagram.width) {
                 // Search for beam sources in the preceding row
-                val cell = diagram[x, y - 1]
-                if (cell == Cell.Splitter || cell == Cell.Start) {
+                val cell = diagram.getPrimitive(x, y - 1)
+                if (cell == BEAM || cell == START) {
                     // Simulate the beam moving down
-                    when (diagram[x, y]) {
-                        Cell.Empty -> diagram[x, y] = Cell.Beam
-                        Cell.Splitter -> {
+                    when (diagram.getPrimitive(x, y)) {
+                        EMPTY -> diagram.setPrimitive(x, y, BEAM)
+                        SPLITTER -> {
                             // Split the beam and count this splitter
-                            diagram[x - 1, y] = Cell.Beam
-                            diagram[x + 1, y] = Cell.Beam
+                            diagram.setPrimitive(x - 1, y, BEAM)
+                            diagram.setPrimitive(x + 1, y, BEAM)
                             count++
                         }
 
@@ -44,19 +43,19 @@ class Day07 : AOCSolution {
 
     override fun part2(inputFile: String): String {
         val diagram = readResourceLines(inputFile)
-            .mapArray { line -> line.mapArray { char -> Cell.byChar(char) } }
-            .toGrid()
+            .mapArray { line -> line.toCharArray() }
+            .toCharGrid()
         val height = diagram.height.toLong()
 
-        val startPosition = diagram.positionOfFirst { it == Cell.Start }
+        val startPosition = diagram.positionOfFirst { it == START }
 
         val splitterDiagram = diagram.mapGrid {
             when (it) {
-                Cell.Splitter, Cell.Start -> {
-                    Splitter()
+                SPLITTER, START -> {
+                    SplitterCell()
                 }
 
-                else -> emptySplitter
+                else -> emptySplitterCell
             }
         }
 
@@ -82,7 +81,7 @@ class Day07 : AOCSolution {
             val nextPosition = beamOrigin + Direction.DOWN
 
             if (nextPosition.y < height) {
-                if (diagram[nextPosition] == Cell.Splitter) {
+                if (diagram.getPrimitive(nextPosition) == SPLITTER) {
                     val splitter = splitterDiagram[nextPosition]
                     if (!splitter.hasSpawned) {
                         // Only spawn new beams, if they weren't spawned already
@@ -108,31 +107,13 @@ class Day07 : AOCSolution {
     }
 
     private companion object {
-        data class Splitter(var incomingBeams: Long = 0L, var hasSpawned: Boolean = false)
+        data class SplitterCell(var incomingBeams: Long = 0L, var hasSpawned: Boolean = false)
 
-        val emptySplitter = Splitter()
+        val emptySplitterCell = SplitterCell()
 
-        enum class Cell(val char: Char) {
-            Start('S'),
-            Empty('.'),
-            Splitter('^'),
-            Beam('|');
-
-            override fun toString(): String {
-                return char.toString()
-            }
-
-            companion object {
-                fun byChar(char: Char) = when (char) {
-                    'S' -> Start
-                    '.' -> Empty
-                    '^' -> Splitter
-                    '|' -> Beam
-
-                    else -> throw NoSuchElementException()
-                }
-
-            }
-        }
+        const val START = 'S'
+        const val EMPTY = '.'
+        const val SPLITTER = '^'
+        const val BEAM = '|'
     }
 }
