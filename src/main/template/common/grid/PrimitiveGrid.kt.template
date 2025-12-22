@@ -3,6 +3,11 @@ package common.grid
 import common.Point
 import common.Rectangle
 
+typealias #TYPE#Initializer = (x: Int, y: Int) -> #TYPE#
+typealias Point#TYPE#Initializer = (point: Point) -> #TYPE#
+typealias #TYPE#Transform<T> = (#TYPE#) -> T
+typealias #TYPE#Predicate = (#TYPE#) -> Boolean
+
 class #TYPE#Grid(
     override val width: Int,
     override val height: Int,
@@ -14,22 +19,34 @@ class #TYPE#Grid(
 
     override val indices = PointProgression(width.toLong(), height.toLong(), 1)
 
-    constructor(width: Int, height: Int, initializer: (x: Int, y: Int) -> #TYPE#) : this(
+    constructor(width: Int, height: Int, initializer: #TYPE#Initializer) : this(
         width,
         height,
-        #TYPE#Array(width * height) { index ->
-            initializer(index % width, index / width)
+        #TYPE#Array(width * height).apply {
+            for (y in 0 until height) {
+                for (x in 0 until width) {
+                    this[y * width + x] = initializer(x, y)
+                }
+            }
         }
     )
 
-    constructor(width: Int, height: Int, initializer: (Point) -> #TYPE#) : this(width, height, { x, y ->
+    constructor(width: Int, height: Int, initializer: Point#TYPE#Initializer) : this(width, height, { x, y ->
         initializer(Point(x, y))
     })
 
-    override operator fun get(x: Int, y: Int): #TYPE# {
+    fun getPrimitive(x: Int, y: Int): #TYPE# {
         require(x in 0 until this.width) { "X index $x out of bounds for range 0..<$width" }
         require(y in 0 until this.height) { "Y index $y out of bounds for range 0..<$height" }
         return this.internalGrid[y * this.width + x]
+    }
+
+    fun getPrimitive(point: Point): #TYPE# {
+        return this.getPrimitive(point.x.toInt(), point.y.toInt())
+    }
+
+    override operator fun get(x: Int, y: Int): #TYPE# {
+        return this.getPrimitive(x, y)
     }
 
     override operator fun get(point: Point): #TYPE# {
@@ -59,17 +76,25 @@ class #TYPE#Grid(
     override fun transposed(): Transposed#TYPE#Grid {
         return Transposed#TYPE#Grid(this)
     }
-    
+
     fun rows(): Array<#TYPE#Array> {
         return Array(this.height) { row ->
             this[row]
         }
     }
 
-    override operator fun set(x: Int, y: Int, value: #TYPE#) {
+    fun setPrimitive(x: Int, y: Int, value: #TYPE#) {
         require(x in 0 until this.width) { "X index out of bounds" }
         require(y in 0 until this.height) { "Y index out of bounds" }
         this.internalGrid[y * this.width + x] = value
+    }
+
+    fun setPrimitive(point: Point, value: #TYPE#) {
+        this.setPrimitive(point.x.toInt(), point.y.toInt(), value)
+    }
+
+    override operator fun set(x: Int, y: Int, value: #TYPE#) {
+        this.setPrimitive(x, y, value)
     }
 
     override operator fun set(point: Point, value: #TYPE#) {
@@ -123,10 +148,32 @@ class #TYPE#Grid(
         }
     }
 
+    inline fun positionOfFirstOrNull(predicate: #TYPE#Predicate): Point? {
+        for (y in 0 until height) {
+            for (x in 0 until width) {
+                if (predicate(this.getPrimitive(x, y))) {
+                    return Point(x, y)
+                }
+            }
+        }
+
+        return null
+    }
+
+    inline fun positionOfFirst(predicate: #TYPE#Predicate): Point {
+        return positionOfFirstOrNull(predicate) ?: throw NoSuchElementException()
+    }
+
     companion object {
         fun filled(width: Int, height: Int, value: #TYPE#): #TYPE#Grid {
             val gridArray = #TYPE#Array(width * height) { value }
             return #TYPE#Grid(width, height, gridArray)
+        }
+
+        fun Grid<#TYPE#>.to#TYPE#Grid(): #TYPE#Grid {
+            return #TYPE#Grid(this.width, this.height) { x, y ->
+                this[x, y]
+            }
         }
 
         fun Iterable<Iterable<#TYPE#>>.to#TYPE#Grid(): #TYPE#Grid {
@@ -138,6 +185,48 @@ class #TYPE#Grid(
                 outer[y].elementAt(x)
             }
             return #TYPE#Grid(width, outer.size, gridArray)
+        }
+
+        fun Array<out Iterable<#TYPE#>>.to#TYPE#Grid(): #TYPE#Grid {
+            val width = this.maxOf(Iterable<#TYPE#>::count)
+            val gridArray = #TYPE#Array(width * this.size) { index ->
+                val x = index % width
+                val y = index / width
+                this[y].elementAt(x)
+            }
+            return #TYPE#Grid(width, this.size, gridArray)
+        }
+
+        fun Array<Array<#TYPE#>>.to#TYPE#Grid(): #TYPE#Grid {
+            val height = this.size
+            val width = this.maxOf(Array<#TYPE#>::size)
+
+            val gridArray = #TYPE#Array(width * height) { index ->
+                val x = index % width
+                val y = index / width
+                this[y][x]
+            }
+
+            return #TYPE#Grid(width, height, gridArray)
+        }
+
+        fun Array<#TYPE#Array>.to#TYPE#Grid(): #TYPE#Grid {
+            val height = this.size
+            val width = this.maxOf(#TYPE#Array::size)
+
+            val gridArray = #TYPE#Array(width * height).apply {
+                for (y in 0 until height) {
+                    this@to#TYPE#Grid[y].copyInto(this, y * width)
+                }
+            }
+
+            return #TYPE#Grid(width, height, gridArray)
+        }
+
+        inline fun <reified U> #TYPE#Grid.mapGrid(transform: #TYPE#Transform<U>): Grid<U> {
+            return DefaultGrid(width, height) { x, y ->
+                transform(this.getPrimitive(x, y))
+            }
         }
     }
 }

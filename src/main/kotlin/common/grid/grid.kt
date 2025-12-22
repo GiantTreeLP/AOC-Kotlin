@@ -65,7 +65,7 @@ inline fun <reified T> DefaultGrid(width: Int, height: Int, initializer: (x: Int
 
     for (y in 0 until height) {
         for (x in 0 until width) {
-            grid[(y * width + x)] = initializer(x, y)
+            grid[y * width + x] = initializer(x, y)
         }
     }
 
