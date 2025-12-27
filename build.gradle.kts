@@ -1,3 +1,4 @@
+import com.google.devtools.ksp.gradle.KspAATask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 val autoServiceKspVersion = "1.2.0"
@@ -6,12 +7,14 @@ val autoServiceAnnotationsVersion = "1.1.1"
 plugins {
     val kspVersion = "2.3.3"
 
-    kotlin("jvm") version "2.2.21"
+    kotlin("jvm") version "2.3.0"
     id("com.google.devtools.ksp") version kspVersion
 }
 
 group = "de.gianttree.misc"
 version = "1.0-SNAPSHOT"
+
+val generatedCommonSources: Provider<Directory> = layout.buildDirectory.dir("generated/common")
 
 repositories {
     mavenCentral()
@@ -34,9 +37,13 @@ tasks.test {
 sourceSets {
     main {
         kotlin {
-            srcDir(layout.buildDirectory.dir("generated/common"))
+            srcDir(generatedCommonSources)
         }
     }
+}
+
+tasks.withType<KspAATask> {
+    dependsOn(tasks.getByName("generateCode"))
 }
 
 tasks.compileKotlin {
@@ -45,10 +52,11 @@ tasks.compileKotlin {
 }
 
 tasks.register<Copy>("generateCode") {
-    val destinationDir = file(layout.buildDirectory.dir("generated/common"))
+    val inputDir = file(layout.projectDirectory.dir("src/main/template/common"))
+    from(inputDir)
+    destinationDir = file(generatedCommonSources)
     destinationDir.deleteRecursively()
     destinationDir.mkdirs()
-    val inputDir = file(layout.projectDirectory.dir("src/main/template/common"))
     val tree = fileTree(inputDir) {
         include("**/*.kt.template")
     }
