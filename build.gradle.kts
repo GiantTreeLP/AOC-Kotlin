@@ -47,8 +47,8 @@ tasks.withType<KspAATask> {
 }
 
 tasks.compileKotlin {
-    dependsOn("generateCode")
-    compilerOptions.jvmTarget.set(JvmTarget.JVM_24)
+    dependsOn(tasks.getByName("generateCode"))
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_25)
 }
 
 tasks.register<Copy>("generateCode") {
@@ -62,7 +62,7 @@ tasks.register<Copy>("generateCode") {
     }
 
     // Replace primitives
-    listOf("Boolean", "Byte", "Short", "Char", "Int", "Long", "Float", "Double").map { primitiveType ->
+    listOf("Boolean", "Byte", "Short", "Char", "Int", "Long", "Float", "Double").forEach { primitiveType ->
         tree.visit {
             if (this.isDirectory) return@visit
 
