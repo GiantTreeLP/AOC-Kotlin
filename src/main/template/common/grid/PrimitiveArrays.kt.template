@@ -6,7 +6,7 @@ fun <T> Array<T>.mapTo#TYPE#Array(transform: (T) -> #TYPE#): #TYPE#Array {
 
 inline fun <T> Array<T>.mapTo#TYPE#Array(
     fromIndex: Int = 0,
-    toIndex: Int = 0,
+    toIndex: Int = lastIndex,
     transform: (T) -> #TYPE#,
 ): #TYPE#Array {
     require(fromIndex in 0..toIndex) { "fromIndex $fromIndex is out of range [0..$toIndex]" }
@@ -16,7 +16,7 @@ inline fun <T> Array<T>.mapTo#TYPE#Array(
 
 inline fun <T> List<T>.mapTo#TYPE#Array(
     fromIndex: Int = 0,
-    toIndex: Int = 0,
+    toIndex: Int = lastIndex,
     transform: (T) -> #TYPE#,
 ): #TYPE#Array {
     require(fromIndex in 0..toIndex) { "fromIndex $fromIndex is out of range [0..$toIndex]" }
