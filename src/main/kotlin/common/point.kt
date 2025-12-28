@@ -1,5 +1,6 @@
 package common
 
+import common.Rectangle.Companion.Rectangle
 import kotlin.math.abs
 
 typealias Position = Point
@@ -19,9 +20,7 @@ data class Point(val x: Long, val y: Long) {
     }
 
     infix operator fun rangeTo(other: Point): Rectangle {
-        val topLeft = Point(minOf(x, other.x), minOf(y, other.y))
-        val bottomRight = Point(maxOf(x, other.x), maxOf(y, other.y))
-        return Rectangle(topLeft, bottomRight)
+        return Rectangle(this, other)
     }
 
     fun turnRight() = Point(-y, x)
@@ -39,10 +38,41 @@ data class Point(val x: Long, val y: Long) {
     fun neighbours() = ALL.map { this + it }
 }
 
-data class Rectangle(val topLeft: Point, val bottomRight: Point) {
+@ConsistentCopyVisibility
+data class Rectangle private constructor(val topLeft: Point, val bottomRight: Point) {
+
     val width = bottomRight.x - topLeft.x
     val height = bottomRight.y - topLeft.y
 
+    val area get() = width * height
+    val outsideArea get() = (width + 1) * (height + 1)
+
     infix operator fun contains(point: Point) =
         point.x in topLeft.x..<bottomRight.x && point.y in topLeft.y..<bottomRight.y
+
+    val edges: Array<Line>
+        get() {
+            val topRight = Point(bottomRight.x, topLeft.y)
+            val bottomLeft = Point(topLeft.x, bottomRight.y)
+            return arrayOf(
+                Line(topLeft, topRight),
+                Line(topRight, bottomRight),
+                Line(bottomRight, bottomLeft),
+                Line(bottomLeft, topLeft)
+            )
+        }
+
+    companion object {
+        fun Rectangle(first: Point, second: Point): Rectangle {
+            return common.Rectangle(
+                Point(minOf(first.x, second.x), minOf(first.y, second.y)),
+                Point(maxOf(first.x, second.x), maxOf(first.y, second.y))
+            )
+        }
+    }
+}
+
+@JvmRecord
+data class Line(val from: Point, val to: Point) {
+    fun axisAlignedRectangle() = Rectangle(from, to)
 }

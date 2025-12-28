@@ -1,8 +1,7 @@
 package common.grid
 
 import common.Point
-import common.Rectangle
-import kotlin.collections.map
+import common.Rectangle.Companion.Rectangle
 
 class TransposedGrid<T>(private val grid: Grid<T>) : Grid<T>, Iterable<T> {
     override val width = this.grid.height

@@ -4,6 +4,7 @@ import com.google.auto.service.AutoService
 import common.AOCSolution
 import common.Point
 import common.Rectangle
+import common.Rectangle.Companion.Rectangle
 import common.readResourceLines
 import kotlin.math.max
 

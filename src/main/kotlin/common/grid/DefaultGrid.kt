@@ -1,7 +1,7 @@
 package common.grid
 
 import common.Point
-import common.Rectangle
+import common.Rectangle.Companion.Rectangle
 
 class DefaultGrid<T>(
     override val width: Int,

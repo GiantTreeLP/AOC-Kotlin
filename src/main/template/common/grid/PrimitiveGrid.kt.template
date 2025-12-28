@@ -1,7 +1,7 @@
 package common.grid
 
 import common.Point
-import common.Rectangle
+import common.Rectangle.Companion.Rectangle
 
 typealias #TYPE#Initializer = (x: Int, y: Int) -> #TYPE#
 typealias Point#TYPE#Initializer = (point: Point) -> #TYPE#
